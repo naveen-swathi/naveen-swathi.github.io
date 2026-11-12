@@ -231,7 +231,6 @@ html[data-look="south"] .side-wm svg .wm { stroke-width: 1.6; }
 html[data-look="south"] .side-wm svg .wm, .wm-gilt .wm { stroke: url(#wm-gold); stroke-width: 1.15; }
 html[data-look="south"] .side-wm svg .wm-dot, .wm-gilt .wm-dot { fill: url(#wm-gold); }
 html[data-look="south"] #invite .grow .ik-wm { opacity: .26; }
-html[data-look="south"] #date .grow .ik-wm { opacity: .22; }
 .gl { position: absolute; width: calc(var(--s, 16px) * 1.9); aspect-ratio: 1; translate: -50% -50%; opacity: 0; pointer-events: none;
   background:
     radial-gradient(closest-side, #FFF8D8 0, #FFF1B8 12%, rgba(255,214,110,.85) 30%, rgba(236,176,62,.34) 56%, rgba(236,176,62,0) 100%),
@@ -886,3 +885,74 @@ html[data-look="western"][data-palette="midnight"] .cl-halo { background: radial
 html[data-look="western"][data-palette="midnight"] .cl-num { text-shadow: 0 1px 0 rgba(0,0,0,.4); }
 html[data-look="western"][data-palette="midnight"] .sheen i { background: linear-gradient(115deg, transparent 35%, rgba(255,244,214,.4) 50%, transparent 65%); }
 /* @end-dark-palettes */
+
+/* r16 lotus pond (BUILD-r16.md) */
+/* r16: the date-page lotus pond, its placement under the hint/pill, and the glowing art mandala (BUILD-r16.md). */
+
+/* ---------- the pond scene (aspect 3:2, viewBox 0 0 360 240) ---------- */
+.lp { position: relative; width: 100%; aspect-ratio: 3 / 2; container-type: inline-size; }
+.lp > .lp-l { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lp .lp-vn { fill: none; stroke: #FFFFFF; stroke-opacity: .3; stroke-width: .45; stroke-linecap: round; }
+.lp .lp-fil { fill: none; stroke: #C29A4A; stroke-width: .5; stroke-linecap: round; }
+.lp .lp-seed { fill: #A88A3C; opacity: .75; }
+.lp .lp-pv { fill: none; stroke: #E6F4EC; stroke-opacity: .6; stroke-width: .5; }
+.lp .lp-rim { fill: none; stroke: #F2FAF5; stroke-opacity: .8; stroke-width: .7; stroke-linecap: round; }
+.lp .lp-sky { fill: none; stroke: #FFFFFF; stroke-opacity: .75; stroke-width: .8; stroke-linecap: round; }
+
+/* idle: the flowers sway about their stem bases, ripples spread, one petal drifts (CSS animations: compositor-only,
+   paused by the site's ".page:not(.live) .och *" and ".page.idle" rules, removed by ".rm .och *") */
+.lp-f { will-change: transform; animation: lp-sway var(--sw, 6s) ease-in-out var(--sd, 0s) infinite alternate; }
+.lp-fA { --sw: 6.4s; --sd: -1.2s; --sa: 1.1deg; } .lp-fB { --sw: 5.2s; --sd: -3.1s; --sa: 1.6deg; } .lp-fC { --sw: 7.1s; --sd: -.4s; --sa: 1.9deg; }
+@keyframes lp-sway { from { transform: rotate(calc(-1 * var(--sa))); } to { transform: rotate(var(--sa)); } }
+.lp-rip { position: absolute; width: 17%; aspect-ratio: 4.2; translate: -50% -50%; border-radius: 50%; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.85), inset 0 0 0 1px rgba(110,160,140,.28);
+  animation: lp-rip 5.6s cubic-bezier(.2,.6,.35,1) var(--d, 0s) infinite; will-change: transform, opacity; }
+@keyframes lp-rip { 0% { transform: scale(.25); opacity: 0; } 12% { opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+.lp-drift { position: absolute; left: 34%; top: 79.5%; width: 4.4%; aspect-ratio: 2; pointer-events: none; opacity: 0;
+  animation: lp-drift 26s linear -6s infinite; will-change: transform, opacity; }
+.lp-drift svg { display: block; width: 100%; height: 100%; }
+@keyframes lp-drift { 0% { transform: translate(0, 0) rotate(-14deg); opacity: 0; } 8% { opacity: 1; }
+  50% { transform: translate(11cqw, -.8cqw) rotate(12deg); } 90% { opacity: 1; } 100% { transform: translate(24cqw, .4cqw) rotate(-6deg); opacity: 0; } }
+.lp-glow { position: absolute; width: 62%; aspect-ratio: 1; translate: -50% -50%; pointer-events: none; opacity: .3; will-change: transform, opacity; }
+.lp-glow > i { position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,246,214,.95), rgba(252,226,170,.55) 38%, rgba(244,196,120,.18) 66%, rgba(244,196,120,0));
+  animation: lp-breathe 4.6s ease-in-out infinite alternate; will-change: transform, opacity; }
+@keyframes lp-breathe { from { transform: scale(.92); opacity: .75; } to { transform: scale(1.06); opacity: 1; } }
+.lp-burst { position: absolute; left: 50%; top: 86.25%; width: 30%; aspect-ratio: 4.2; translate: -50% -50%; border-radius: 50%; opacity: 0; pointer-events: none;
+  box-shadow: 0 0 0 1.4px rgba(255,250,232,.95), 0 0 10px 1px rgba(244,206,120,.45); }
+.lp[data-state="open"] .lp-glow { opacity: 1; }
+.lp.lp-paused *, .lp.lp-paused { animation-play-state: paused !important; }
+.rm .lp *, .lp.lp-still * { animation: none !important; }
+.rm .lp-rip, .lp.lp-still .lp-rip { opacity: .55; transform: scale(.9); }
+.rm .lp-drift, .lp.lp-still .lp-drift { opacity: 1; transform: translate(16cqw, -1.4cqw) rotate(8deg); }
+
+/* ---------- placement on the date page (South look, dove) ----------
+   .lp-stage fills #date .grow below a top gap, so nothing reaches the hint, the pill or "Hold the evening for us".
+   On phones the music button (fixed, bottom-right) can reach into the grow box: the scene either stays narrow enough
+   to clear it sideways or rises above it (--bot). Every length is exact CSS, no script. */
+#date .grow .lp-stage, .lp-stage { position: absolute; inset: var(--lp-top) 0 0 0; container-type: size;
+  --lp-top: calc(12 * var(--u, 1px));
+  --mb: max(6px, 76px - 58 * var(--u, 1px));
+  --free: calc(var(--colw, 100cqw) - 160px);
+  --W: min(100cqw, 360px, max(min(150cqh - 9px, var(--free)), 150cqh - 1.5 * var(--mb)));
+  --H: calc(var(--W) / 1.5);
+  --bot: clamp(6px, (var(--W) - var(--free)) * 100, var(--mb));
+  --cy: calc(100cqh - var(--bot) - .55 * var(--H));
+  --D: min(100cqw + 20px, 1.3 * var(--W) + 20px, 4 * var(--cy));
+}
+@media (min-width: 520px) { .lp-stage { --mb: 6px; --free: 100cqw; } }
+.lp-stage > .lp { position: absolute; left: 50%; bottom: var(--bot); width: var(--W); translate: -50% 0; }
+/* the mandala: centred on the main flower's heart, clipped to the stage, fading in from the stage top and out into the water */
+.lp-wmc { position: absolute; inset: 0 -12px; pointer-events: none;
+  -webkit-mask: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 9%, #000 24%, #000 calc(100cqh - var(--bot) - .36 * var(--H)), rgba(0,0,0,.18) calc(100cqh - var(--bot) - .2 * var(--H)), transparent calc(100cqh - var(--bot) - .06 * var(--H)));
+          mask: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 9%, #000 24%, #000 calc(100cqh - var(--bot) - .36 * var(--H)), rgba(0,0,0,.18) calc(100cqh - var(--bot) - .2 * var(--H)), transparent calc(100cqh - var(--bot) - .06 * var(--H))); }
+.lp-wmc .lp-wm { position: absolute; left: 50%; top: var(--cy); width: var(--D); aspect-ratio: 1; translate: -50% -50%; opacity: var(--wm-o, .5); }
+.lp-wmc svg { display: block; width: 100%; height: 100%; }
+@container (max-height: 90px) { .lp-stage > .lp, .lp-wmc { display: none; } }
+
+/* ---------- the art mandala ---------- */
+.lp-mand .wm { fill: none; stroke-linecap: round; }
+.lp-mand .lp-en1 { fill: #EDB3BE; opacity: .26; }
+.lp-mand .lp-en2 { fill: #9BCBB5; opacity: .2; }
+.lp-mand .lp-en3 { fill: #F6E2B4; opacity: .5; }
+.lp-mand .wm.fine { stroke-width: .55; }

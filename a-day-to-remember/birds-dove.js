@@ -3,7 +3,7 @@
 // hidden under ?bird=peacock); the enamel fills (kolam, lotus, mandalas, threshold) come from the shared base.
 import { doveScene as doveSceneWestern } from './dove.js';
 import { doveScene as doveSceneReal } from './real-scenes.js';
-import { medallion, lotusBloom } from './fills.js';
+import { medallion } from './fills.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const PAGES = ['invite', 'date', 'reception', 'closing'];
@@ -61,10 +61,7 @@ export function initDoveBirds({ gsap, RM, WF = null }) {
     bloom() {
       if (RM || bloomed) return;
       if (WF) { bloomed = true; wms.date.bloom(); return; }
-      const lot = $('#date svg.dlotus');
-      if (!lot) return;
       bloomed = true;
-      lotusBloom(gsap, lot);
     },
     lift() { ctls.closing.lift(gsap); },
     live(id) { if (!RM) PAGES.forEach((p) => { ctls[p].live(p === id); wms[p]?.live(p === id); }); },

@@ -11,6 +11,7 @@ import { initThenNow } from './thennow.js';
 import { initDate, initBlessings, initReception, initClosing } from './pages-fx.js';
 import { initExtras } from './extras.js';
 import { initGate } from './gate-seal.js';
+import { mountPond } from './lotus-pond.js';
 import { initDemo } from './demo.js';
 
 const WEST = document.documentElement.dataset.look === 'western';
@@ -40,6 +41,8 @@ $('#venue-link').href = FACTS.venue.maps;
 $('#directions').href = FACTS.venue.directions;
 $('#cl-num').innerHTML = FACTS.date.short.split(' · ').join('<i>·</i>');
 $('#lg-heart').setAttribute('d', heartPath());
+const POND = !WEST && BIRD === 'dove' ? $('#date .grow.v-dove') : null;
+POND?.replaceChildren();
 const ORN = WEST ? {
   gable: WF.wreathCrown, divider: () => WF.divider(), ikolam: WF.posy, dlotus: () => WF.dateRose(RM ? 1 : 0.1), lkolam: () => WF.ledge(300),
   threshold: WF.threshold, mandala: WF.lace, cornerfan: WF.cornerSpray, jas: WF.strip,
@@ -99,6 +102,7 @@ new ResizeObserver(cord).observe($('#date .pg'));
 
 const gsap = window.gsap;
 gsap.registerPlugin(window.DrawSVGPlugin);
+const pond = POND ? mountPond(POND, { gsap, F, rm: RM }) : null;
 const rng = VIDEO ? mulberry32(1212) : Math.random;
 const wineInk = () => getComputedStyle(document.documentElement).getPropertyValue('--wine').trim() || '#7A2145';
 const gilt = (sel, ink = wineInk()) => {
@@ -124,7 +128,7 @@ let held = null;
 const onLive = (id) => { birds.live(id); blossoms.setPage(id); if (id === 'date' && scratch.done) blossoms.setTarget(8); };
 const tn = initThenNow({ gsap, RM, blossoms });
 const dateFx = initDate({ gsap, RM, scratch: { get done() { return scratch.done; } }, blossoms, gilt });
-const scratch = initScratch({ gsap, RM, onReveal: () => { dateFx.onReveal(); birds.bloom(); }, onTouch: dateFx.onTouch });
+const scratch = initScratch({ gsap, RM, onReveal: () => { dateFx.onReveal(); birds.bloom(); pond?.bloom(); }, onTouch: dateFx.onTouch });
 const dp = (s) => $(s, $('#invite'));
 const pages = initPages({
   gsap, RM, VIDEO,
@@ -171,11 +175,21 @@ const ready = Promise.race([(async () => {
 
 const music = $('#music');
 let audio = null;
-if (FACTS.music) fetch(FACTS.music, { method: 'HEAD' }).then((r) => { if (r.ok) { audio = new Audio(FACTS.music); audio.loop = true; audio.preload = 'auto'; if (opened) music.hidden = false; } }).catch(() => {});
+let userMuted = false;
+if (FACTS.music && !VIDEO) {
+  audio = new Audio(FACTS.music);
+  audio.loop = true;
+  audio.preload = 'auto';
+  audio.addEventListener('error', () => { audio = null; music.hidden = true; }, { once: true });
+}
 const setMusic = (on) => { music.classList.toggle('on', on); music.setAttribute('aria-pressed', String(on)); };
+const startMusic = () => { if (audio && audio.paused && !userMuted) audio.play().then(() => setMusic(true)).catch(() => {}); };
+// Mobile browsers only allow sound from a completed tap (touchend/click), not from the first touch that opens the seal.
+const unlock = (e) => { if (!opened || e.target.closest?.('#music')) return; startMusic(); if (audio && !audio.paused) ['touchend', 'click', 'keydown'].forEach((ev) => removeEventListener(ev, unlock, true)); };
+['touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, unlock, true));
 music.addEventListener('click', () => {
   if (!audio) return;
-  if (audio.paused) audio.play().then(() => setMusic(true)).catch(() => {}); else { audio.pause(); setMusic(false); }
+  if (audio.paused) { userMuted = false; audio.play().then(() => setMusic(true)).catch(() => {}); } else { userMuted = true; audio.pause(); setMusic(false); }
 });
 
 const gate = $('#gate');
@@ -207,7 +221,7 @@ function openGate(e) {
   opened = true;
   t0 = performance.now();
   music.hidden = !audio;
-  if (audio) audio.play().then(() => setMusic(true)).catch(() => {});
+  startMusic();
   document.body.classList.add('s-fade');
   if (!RM) document.body.classList.replace('locked', 'opening');
   gt.play(done, { tap: !AUTO && !!e?.isTrusted });
