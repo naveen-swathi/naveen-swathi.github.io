@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Naveen &amp; Swathi · Wedding Reception</title>
+<meta name="description" content="We warmly invite you to our wedding reception in Coimbatore. With love, Naveen &amp; Swathi">
+<meta property="og:url" content="https://naveen-swathi.github.io/a-day-to-remember/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Naveen &amp; Swathi · Wedding Reception">
+<meta property="og:description" content="You are warmly invited to celebrate with us.">
+<meta property="og:image" content="https://naveen-swathi.github.io/a-day-to-remember/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F8EDE4">
+<link rel="icon" href="img/favicon.png" type="image/png">
+<link rel="preload" as="image" href="img/seal-600.webp" fetchpriority="high" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Marcellus&family=Cinzel:wght@500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="opening.css">
+<link rel="stylesheet" href="dove.css">
+<script>
+  document.documentElement.classList.add('js');
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#gate')) window.__tapped = true; }, true);
+  var q = new URLSearchParams(location.search);
+  if (q.get('video') === '1') document.documentElement.classList.add('video');
+  if (q.get('video') === '1' || q.get('demo') === '1') document.documentElement.classList.add('demo');
+  if (q.get('rm') !== '1' && !matchMedia('(prefers-reduced-motion: reduce)').matches) { var pb = document.createElement('link'); pb.rel = 'preload'; pb.as = 'image'; pb.href = 'img/blooms.webp'; pb.fetchPriority = 'low'; document.head.appendChild(pb); }
+  var pal = q.get('palette'), bird = q.get('bird'), de = document.documentElement;
+  var west = q.get('look') === 'western';
+  de.dataset.look = west ? 'western' : 'south';
+  de.dataset.palette = west ? (pal === 'midnight' ? 'midnight' : 'garden') : (pal === 'pachai' || pal === 'neelambari' ? pal : 'panneer');
+  de.dataset.bird = bird === 'dove' || bird === 'peacock' ? bird : 'dove';
+  var THEME = { panneer: '#F8EDE4', pachai: '#E5EFE7', neelambari: '#EEE6F2', garden: '#F7F0E6', midnight: '#121C30' };
+  document.querySelector('meta[name=theme-color]').content = THEME[de.dataset.palette];
+  if (!west) { var pd = document.createElement('link'); pd.rel = 'preload'; pd.as = 'image'; pd.href = 'img/diya.webp'; pd.fetchPriority = 'low'; document.head.appendChild(pd); }
+</script>
+</head>
+<body class="locked">
+<svg class="defs" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <radialGradient id="flg" cx="50%" cy="74%" r="62%" fx="50%" fy="80%">
+    <stop offset="0" stop-color="#FFFFF4"/><stop offset=".22" stop-color="#FFF0B5"/><stop offset=".5" stop-color="#FFC45C"/>
+    <stop offset=".8" stop-color="#F0862A" stop-opacity=".95"/><stop offset="1" stop-color="#D9581A" stop-opacity="0"/>
+  </radialGradient>
+  <symbol id="flame" viewBox="0 0 20 44"><path d="M10 0C11.5 9 18.5 19 18.5 30.5A8.5 8.5 0 0 1 1.5 30.5C1.5 19 8.5 9 10 0Z" fill="url(#flg)"/><ellipse cx="10" cy="33" rx="3.2" ry="5" fill="#FFFFF8" opacity=".85"/></symbol>
+</defs></svg>
+
+<div id="ground" class="fx ground" aria-hidden="true"></div>
+<div id="frame" class="fx" aria-hidden="true"></div>
+<canvas id="petals" class="fx" aria-hidden="true"></canvas>
+<i id="veil" class="fx" aria-hidden="true"></i>
+<i class="side-wm l" aria-hidden="true"></i><i class="side-wm r" aria-hidden="true"></i>
+<div class="side l" aria-hidden="true"></div><div class="side r" aria-hidden="true"></div>
+<i id="probe" aria-hidden="true"></i>
+
+<div id="pgsr" class="sr" role="status" aria-live="polite"></div>
+<button id="nx" class="nx" type="button" aria-label="Next page"></button>
+
+<div id="phone">
+<main>
+
+<section id="invite" class="page" aria-label="Invitation">
+  <div class="pg">
+    <i class="pg-wash och invite" aria-hidden="true"></i>
+    <div class="gable-wrap och v-peacock" data-depth=".55">
+      <span data-orn="gable"></span>
+      <span class="logo" role="img" aria-label="N and S monogram" data-seal-target></span>
+    </div>
+    <div class="dv-crown och v-dove" data-depth=".55">
+      <span class="logo" role="img" aria-label="N and S monogram" data-seal-target></span>
+    </div>
+    <p class="eyebrow"><span class="ln"><span class="li">Together with our families</span></span></p>
+    <h1 class="names">
+      <span class="ln"><span class="li nm" data-fact="couple.groomFull"></span></span>
+      <span class="ln"><span class="li script amp"><span class="sr">and</span><span aria-hidden="true">&amp;</span></span></span>
+      <span class="ln"><span class="li nm" data-fact="couple.brideFull"></span></span>
+    </h1>
+    <p class="lead"><span class="ln"><span class="li">warmly invite you to our</span></span></p>
+    <p class="event"><span class="ln"><span class="li" data-fact="event"></span></span></p>
+    <span class="och dv-slot" data-orn="divider"></span>
+    <div class="pk-stage stage och v-peacock" data-depth="1.2" aria-hidden="true"></div>
+    <div class="grow och v-dove" data-depth=".8" aria-hidden="true"><i class="ik-wm" data-orn="mandala"></i><span data-orn="ikolam"></span></div>
+    <div class="thresh-wrap och v-dove" data-depth=".55" aria-hidden="true">
+      <span data-orn="threshold"></span>
+      <span class="dp t1 mir" data-deepam data-h="36"></span><span class="dp t2 mir" data-deepam data-h="48"></span>
+      <span class="dp t3" data-deepam data-h="48"></span><span class="dp t4" data-deepam data-h="36"></span>
+    </div>
+  </div>
+</section>
+
+<section id="date" class="page" aria-label="The date">
+  <div class="pg">
+    <i class="pg-wash och date" aria-hidden="true"></i>
+    <p class="eyebrow"><span class="ln"><span class="li">A day to remember</span></span></p>
+    <div class="dv-carry och v-dove" data-depth="1" aria-hidden="true"></div>
+    <div class="scratch fade" id="scratch">
+      <div class="reveal" id="reveal-card" tabindex="-1" role="status" aria-live="polite">
+        <p class="eyebrow dark" data-fact="date.weekday"></p>
+        <p class="rv-day" data-fact="date.day"></p>
+        <p class="rv-month"><span data-fact="date.month"></span> <span data-fact="date.year"></span></p>
+        <i class="rule" aria-hidden="true"></i>
+        <p class="rv-time" data-fact="date.start"></p>
+      </div>
+      <canvas id="foil" aria-hidden="true"></canvas>
+      <i class="finger" id="finger" aria-hidden="true"></i>
+    </div>
+    <div class="blk act">
+      <p class="after defer" id="after"><span class="ln"><span class="li">Hold the evening for us</span></span></p>
+      <p class="hint"><span class="ln"><span class="li" id="hint">Scratch the gold to reveal</span></span></p>
+      <button class="pill pill-ghost" id="tap-reveal" type="button"><span>or tap<span class="tr-more"> to reveal</span></span></button>
+    </div>
+    <div class="pk-stage stage och v-peacock" data-depth="1.2" aria-hidden="true"></div>
+    <div class="grow och v-dove" data-depth="1.2" aria-hidden="true"><i class="ik-wm" data-orn="mandala"></i><span data-orn="dlotus"></span></div>
+  </div>
+</section>
+
+<section id="blessings" class="page" aria-label="With the blessings of">
+  <div class="pg">
+    <i class="pg-wash och blessings" aria-hidden="true"></i>
+    <p class="eyebrow"><span class="ln"><span class="li">With the blessings of</span></span></p>
+    <p class="parents" data-fact="blessings.0"></p>
+    <img class="jas och fade v-south" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="img/jasmine-strip.png" alt="" width="760" height="106" decoding="async">
+    <span class="jas-w och fade v-west" data-orn="jas" aria-hidden="true"></span>
+    <p class="parents" data-fact="blessings.1"></p>
+    <div class="grow och" data-depth="1.4">
+      <div class="lampset">
+        <i class="wm-wrap" data-orn="mandala"></i>
+        <div class="lamps">
+          <i class="pool" aria-hidden="true"></i>
+          <button class="lamp" type="button" data-i="0" aria-pressed="false" aria-label="Light lamp 1 of 5"><span class="dp" data-deepam data-h="40"></span></button>
+          <button class="lamp" type="button" data-i="1" aria-pressed="false" aria-label="Light lamp 2 of 5"><span class="dp" data-deepam data-h="52"></span></button>
+          <button class="lamp" type="button" data-i="2" aria-pressed="false" aria-label="Light lamp 3 of 5"><span class="dp" data-deepam data-h="64"></span></button>
+          <button class="lamp" type="button" data-i="3" aria-pressed="false" aria-label="Light lamp 4 of 5"><span class="dp" data-deepam data-h="52"></span></button>
+          <button class="lamp" type="button" data-i="4" aria-pressed="false" aria-label="Light lamp 5 of 5"><span class="dp" data-deepam data-h="40"></span></button>
+        </div>
+        <span data-orn="lkolam" aria-hidden="true"></span>
+        <p class="bl-line defer" aria-live="polite">
+          <span class="ln"><span class="li bl-hint">Touch the lamps to light them</span></span>
+          <span class="ln"><span class="li bl-after">Thank you for your blessings</span></span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="thennow" class="page" aria-label="Then, now and forever">
+  <div class="pg">
+    <i class="pg-wash och invite" aria-hidden="true"></i>
+    <p class="sr">Two childhood photos of us: Naveen in tiny sunglasses and Swathi with a bright smile. A photo of the two of us sitting together on a rock beside a mountain river. A black and white portrait of the two of us looking at each other. Now and forever, we’re getting married! Come celebrate with us.</p>
+    <p class="eyebrow"><span class="ln"><span class="li">Then, now &amp; forever</span></span></p>
+    <div class="tn-stage" data-depth="1.35" aria-hidden="true">
+      <figure class="tn pl pl-n"><div class="in"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="./shared/img/naveen-child-640.jpg" alt="" decoding="async"><figcaption>Naveen</figcaption></div></figure>
+      <figure class="tn pl pl-s"><div class="in"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="./shared/img/swathi-child-640.jpg" alt="" decoding="async"><figcaption>Swathi</figcaption></div></figure>
+      <figure class="tn pr pr-now"><div class="in"><div class="ph"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="./shared/img/now-river-760.jpg" alt="" decoding="async"></div><i class="sheen"><i></i></i></div></figure>
+      <figure class="tn pr pr-tog"><div class="in"><div class="ph">
+        <img class="col" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="./shared/img/couple-760.jpg" alt="" decoding="async">
+        <img class="mono" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="./shared/img/couple-760.jpg" alt="" decoding="async">
+        <i class="dev"></i></div><i class="sheen"><i></i></i><span class="tn-knot" aria-hidden="true" data-deco="knot"></span></div></figure>
+    </div>
+    <div class="tn-lines" aria-hidden="true">
+      <p class="tn-l l0"><span class="ln"><span class="li">One of us in tiny sunglasses,</span></span><span class="ln"><span class="li">the other, all smiles.</span></span></p>
+      <p class="tn-l l1 defer"><span class="ln"><span class="li">All grown up,</span></span><span class="ln"><span class="li">and only eyes for each other.</span></span></p>
+      <div class="tn-l l2 defer"><h2 class="tn-line"><span class="ln"><span class="li">We’re getting</span></span><span class="ln"><span class="li">married!</span></span></h2><p class="tn-sub"><span class="ln"><span class="li">Come celebrate with us.</span></span></p></div>
+    </div>
+    <div class="tn-thread" aria-hidden="true">
+      <i class="tr"></i><i class="fuse" aria-hidden="true"></i><i class="bead"><i class="ring"></i></i>
+      <span data-k="0" class="on">Then</span><span data-k="1">Now</span><span data-k="2">Forever</span>
+    </div>
+    <div class="tn-rwrap"><button type="button" class="tn-replay" aria-label="Play our story again" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.6 4.7" /><path d="M5 4v5h5" /></svg><span>Play again</span></button></div>
+    <p class="sr tn-status" aria-live="polite"></p>
+  </div>
+</section>
+
+<section id="reception" class="page" aria-label="Reception details">
+  <div class="pg">
+    <i class="pg-wash och reception" aria-hidden="true"></i>
+    <p class="eyebrow" data-fact="event"></p>
+    <p class="r-time" data-fact="date.time"></p>
+    <span class="och dv-slot" data-orn="divider"></span>
+    <a class="venue" id="venue-link" target="_blank" rel="noopener" aria-label="Sri Sri Anandham Kalyana Mandapam, Coimbatore. Opens in Google Maps">
+      <h2 class="r-venue" data-fact="venue.name"></h2>
+      <p class="r-lines" id="v-lines"></p>
+      <span class="r-map"><span class="pin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><i class="rp"></i><i class="rp"></i><i class="rp"></i></span><span class="lbl">Open in Google Maps</span><svg class="ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5h5.5V8M9.5 2.5L3 9"/></svg></span>
+    </a>
+    <div class="pk-stage stage och v-peacock" data-depth="1.2" aria-hidden="true"></div>
+    <div class="stage och v-dove" data-depth="1.2" aria-hidden="true"><div class="dv-wreath dv-stage"></div></div>
+    <a class="pill pill-kumkum foot" id="directions" target="_blank" rel="noopener" aria-label="Get directions to Sri Sri Anandham Kalyana Mandapam"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4z"/></svg>Get directions</a>
+  </div>
+</section>
+
+<section id="savedate" class="page" aria-label="Save the date">
+  <div class="pg">
+    <i class="pg-wash och savedate" aria-hidden="true"></i>
+    <div class="card fade" data-depth="1.35" data-tilt>
+      <i class="pc-corner c1" aria-hidden="true" data-orn="cornerfan"></i><i class="pc-corner c2" aria-hidden="true" data-orn="cornerfan"></i>
+      <i class="pc-corner c3" aria-hidden="true" data-orn="cornerfan"></i><i class="pc-corner c4" aria-hidden="true" data-orn="cornerfan"></i>
+      <p class="eyebrow dark">Save the date</p>
+      <h2 class="month"><span data-fact="date.month"></span> <span data-fact="date.year"></span></h2>
+      <span class="dv-slot" data-orn="divider"></span>
+      <div class="cal" id="cal" role="img" aria-label="December 2026 calendar with the 12th marked for our wedding reception"></div>
+      <p class="legend"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="lg-heart"/></svg><span data-fact="event"></span></p>
+      <div class="count">
+        <div class="cd" id="cd">
+          <div><b data-u="d">00</b><span>Days</span></div><i>:</i>
+          <div><b data-u="h">00</b><span>Hours</span></div><i>:</i>
+          <div><b data-u="m">00</b><span>Minutes</span></div><i>:</i>
+          <div><b data-u="s">00</b><span>Seconds</span></div>
+        </div>
+        <p class="cd-cap" id="cd-cap">until we celebrate</p>
+        <p class="cd-state" id="cd-state" role="status"></p>
+      </div>
+      <div class="cal-actions">
+        <button class="pill pill-kumkum" id="addcal" type="button" aria-expanded="false" aria-controls="calmenu">Add to calendar</button>
+        <div class="calmenu" id="calmenu" hidden>
+          <a id="gcal" target="_blank" rel="noopener">Google Calendar</a>
+          <a id="ics" download="naveen-swathi-reception.ics">Calendar file (.ics)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="closing" class="page" aria-label="Closing">
+  <div class="pg">
+    <i class="pg-wash och closing" aria-hidden="true"></i>
+    <div class="blk">
+      <h2 class="cl-h"><span class="ln"><span class="li">We look forward to</span></span> <span class="ln"><span class="li">celebrating with you</span></span></h2>
+      <p class="cl-names"><span class="ln"><span class="li"><span data-fact="couple.groom"></span> <em>&amp;</em> <span data-fact="couple.bride"></span></span></span></p>
+      <div class="cl-date">
+        <p class="sr" data-fact="date.display"></p>
+        <div class="cl-lock" aria-hidden="true">
+          <i class="cl-pool"></i><i class="cl-halo"></i>
+          <i class="hl"></i>
+          <span class="cl-wd" data-fact="date.weekday"></span>
+          <span class="cl-row"><span class="dp mir" data-deepam data-h="34"></span><span class="cl-num" id="cl-num"></span><span class="dp" data-deepam data-h="34"></span></span>
+          <i class="hl"></i>
+        </div>
+      </div>
+      <p class="cl-line"><span class="ln"><span class="li" data-fact="lines.closing"></span></span></p>
+    </div>
+    <div class="foot">
+      <p class="thank script"><span class="ln"><span class="li">Thank you</span></span></p>
+      <span class="logo fade" role="img" aria-label="N and S monogram"></span>
+      <p class="cl-hint">Tap to shower us with flowers</p>
+    </div>
+    <div class="pk-stage stage och v-peacock" data-depth="1.2" aria-hidden="true"></div>
+    <div class="stage och v-dove" data-depth="1.2" aria-hidden="true"><div class="dv-close dv-stage"></div></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div id="gate" class="fx" role="dialog" aria-modal="true" aria-label="Invitation entrance">
+  <div class="s-light"></div>
+  <div class="s-ghost" aria-hidden="true"><i class="hi"></i><i class="sh"></i><i class="base"></i></div>
+  <div class="s-grp" aria-hidden="true">
+    <div class="s-disc">
+      <i class="s-well"></i><i class="s-press"></i><i class="s-ripple"></i><i class="s-aura"></i><i class="s-orbit"></i><i class="s-orbit o2"></i><i class="s-spark"></i>
+      <svg class="s-ring" viewBox="0 0 260 260" focusable="false"><circle class="s-draw" cx="130" cy="130" r="129.4" transform="rotate(-90 130 130)"/></svg>
+    </div>
+    <div class="seal"><i class="lift"></i><i class="sh"></i><i class="hi"></i><i class="base"></i><i class="foil"><b></b></i><i class="melt"><b></b></i></div>
+  </div>
+  <button class="g-open" id="open" type="button"><span class="lbl">Tap to begin</span></button>
+  <button class="g-skip" type="button">Skip</button>
+</div>
+
+<button id="music" class="music" type="button" aria-label="Music" aria-pressed="false" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3.5 9.5h3.3L12 5.2v13.6l-5.2-4.3H3.5z"/><path class="wv w1" d="M15.2 9.3a4.1 4.1 0 0 1 0 5.4"/><path class="wv w2" d="M17.9 6.6a8 8 0 0 1 0 10.8"/><line class="slash" x1="4" y1="20" x2="20" y2="4"/></svg>
+</button>
+
+<noscript><style>#gate{display:none}body.locked{overflow:auto}.li,.fade{opacity:1!important;transform:none!important}</style></noscript>
+
+<script src="./shared/vendor/gsap/gsap.min.js"></script>
+<script src="./shared/vendor/gsap/DrawSVGPlugin.min.js"></script>
+<script type="module" src="main.js"></script>
+<script>addEventListener('load', function () { setTimeout(function () { if (!window.__booted) document.getElementById('gate').addEventListener('click', function () { location.reload(); }); }, 6000); });</script>
+</body>
+</html>

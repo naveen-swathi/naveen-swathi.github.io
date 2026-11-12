@@ -1,0 +1,24 @@
+/* r13 dove variant: layout of the dove containers (hidden under ?bird=peacock). The drawing and motion live in dove.js, wired by birds-dove.js. */
+.dv-stage { position: relative; }
+.dv-stage > .dv-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dv-crown { position: relative; width: calc(350 * var(--u)); max-width: calc(100% + 30 * var(--u)); aspect-ratio: 350 / 176; margin-top: calc(-58 * var(--u)); margin-bottom: calc(6 * var(--u)); }
+.dv-crown .logo { position: absolute; left: 50%; top: 32.5%; width: 11.4%; translate: -50% -50%; }
+.dv-carry { width: calc(330 * var(--u)); max-width: calc(100% + 30 * var(--u)); aspect-ratio: 330 / 124; margin: calc(12 * var(--u)) 0 calc(-6 * var(--u)); position: relative; z-index: 1; }
+.dv-wreath { height: min(100cqh, 100cqw * 358 / 260); aspect-ratio: 260 / 358; }
+.dv-close { width: min(100cqw + 30 * var(--u), 100cqh * 300 / 230); aspect-ratio: 300 / 230; }
+#closing .stage.v-dove { max-height: min(calc(.40 * var(--ch)), calc((var(--colw) - 80 * var(--u)) * 230 / 300)); place-items: end center; }
+#invite .grow .ik-wm { position: absolute; left: 50%; top: 50%; width: min(100cqh + 40px, 100cqw); aspect-ratio: 1; translate: -50% -50%; opacity: .17; }
+#invite .grow .ik-wm svg, #date .grow .ik-wm svg { width: 100%; height: 100%; }
+#invite .grow svg.ikol { width: auto; height: min(100cqh - 24px, calc(170 * var(--u))); max-width: 50%; position: relative; }
+#date .grow .ik-wm { position: absolute; left: 50%; top: 50%; width: min(100cqh + 60px, 100cqw + 40px); aspect-ratio: 1; translate: -50% -50%; opacity: .14; }
+#date .grow svg.dlotus { width: min(100cqw, (100cqh - 10px) * 1.9, 300px); height: auto; position: relative; }
+@container (max-height: 99px) { svg.dlotus { display: none; } }
+.thresh-wrap { position: relative; width: max(170px, calc(200 * var(--u))); margin-bottom: calc(-6 * var(--u)); }
+.thresh-wrap svg { display: block; width: 100%; height: auto; }
+.thresh-wrap .dp { --w: max(21px, calc(27 * var(--u))); position: absolute; bottom: 66%; left: calc(var(--x) - var(--w) / 2); }
+.thresh-wrap .t1 { --x: 14%; } .thresh-wrap .t2 { --x: 31%; } .thresh-wrap .t3 { --x: 69%; } .thresh-wrap .t4 { --x: 86%; }
+.js:not(.rm) .thresh-wrap .dp { opacity: 0; }
+.js:not(.rm) .ikol .kline { stroke-dasharray: 1 2; stroke-dashoffset: 1.02; }
+.js:not(.rm) .ikol .kline.loops { fill-opacity: 0; }
+.js:not(.rm) .ikol circle { opacity: 0; }
+html[data-bird="dove"] .scratch { transform-origin: 50% 0; }
