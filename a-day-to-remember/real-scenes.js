@@ -56,7 +56,7 @@ export function doveScene(page, host, opts = {}) {
   ensureDefs();
   const birds = [], ticks = [], idles = [];
   const w = host.getBoundingClientRect().width || (typeof innerWidth === 'number' ? innerWidth * 0.8 : 320);
-  let tl = null, ticking = false, isLive = true, gsapRef = null, started = false, entering = false, lifting = null, liftAt = -9;
+  let tl = null, ticking = false, held = false, isLive = true, gsapRef = null, started = false, entering = false, lifting = null, liftAt = -9;
   const bird = (parent, { x, y, s, flip = false, bride = false, pose: ps = 'perch', carry = null, extra = {}, tq = 1 }) => {
     const d = createDove(parent, { x, y, s: bride ? s * 0.95 : s, flip, bride, carry, tq });
     const p = Object.assign({}, POSES.perch, POSES[ps], extra, { x, y });
@@ -65,8 +65,12 @@ export function doveScene(page, host, opts = {}) {
     return b;
   };
   const apply = () => { birds.forEach((b) => b.apply()); ticks.forEach((fn) => fn()); };
-  const tickOn = (on) => { if (!gsapRef || on === ticking) return; ticking = on; gsapRef.ticker[on ? 'add' : 'remove'](apply); };
-  const sync = () => tickOn(started && (isLive || entering));
+  // Phones redraw the idle breathing at half rate (the entrance and every other state at full rate).
+  const half = typeof matchMedia === 'function' && matchMedia('(max-width: 519px)').matches;
+  let tk = 0;
+  const tick = () => { if (!half || entering || (tk++ & 1) === 0) apply(); };
+  const tickOn = (on) => { if (!gsapRef || on === ticking) return; ticking = on; gsapRef.ticker[on ? 'add' : 'remove'](tick); };
+  const sync = () => tickOn(!held && started && (isLive || entering));
   const fin = {};
   let build = () => null;
 
@@ -274,7 +278,7 @@ export function doveScene(page, host, opts = {}) {
       entering = false;
       (fin.landed || []).forEach((b) => dropOpenWings(b.d));
       if (fin.idle) idles.push(...fin.idle(gsap));
-      idles.forEach((t) => t.paused(!isLive));
+      idles.forEach((t) => t.paused(held || !isLive));
       sync();
     });
     apply();
@@ -290,8 +294,16 @@ export function doveScene(page, host, opts = {}) {
       sync();
       return tl;
     },
-    live(on) { isLive = on; idles.forEach((t) => t.paused(!on)); sync(); if (!on) apply(); },
-    finish() { if (started && entering) tl.progress(1); apply(); },
+    hold(on) {
+      if (held === on) return;
+      held = on;
+      if (entering && tl) tl.paused(on);
+      idles.forEach((t) => t.paused(on || !isLive));
+      lifting?.paused(on);
+      sync();
+    },
+    live(on) { isLive = on; idles.forEach((t) => t.paused(held || !on)); sync(); if (!on) apply(); },
+    finish() { if (started && entering) { tl.progress(1); apply(); } },
     lift(gsap) {
       if (!fin.lift || !started || entering || !isLive || gsap.ticker.time - liftAt < 1.2) return null;
       liftAt = gsap.ticker.time;

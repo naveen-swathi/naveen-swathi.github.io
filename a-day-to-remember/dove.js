@@ -536,7 +536,7 @@ export function doveScene(page, host, opts = {}) {
       return tl;
     },
     live(on) { isLive = on; idles.forEach((t) => t.paused(!on)); sync(); if (!on) apply(); },
-    finish() { if (started && entering) tl.progress(1); apply(); },
+    finish() { if (started && entering) { tl.progress(1); apply(); } },
     lift(gsap) {
       if (!fin.lift || !started || entering || !isLive || gsap.ticker.time - liftAt < 1.2) return null;
       liftAt = gsap.ticker.time;

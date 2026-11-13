@@ -56,6 +56,7 @@
 
 <div id="pgsr" class="sr" role="status" aria-live="polite"></div>
 <button id="nx" class="nx" type="button" aria-label="Next page"></button>
+<div id="pdots" class="pdots" aria-hidden="true"></div>
 
 <div id="phone">
 <main>
@@ -125,7 +126,7 @@
     <p class="parents" data-fact="blessings.1"></p>
     <div class="grow och" data-depth="1.4">
       <div class="lampset">
-        <i class="wm-wrap" data-orn="mandala"></i>
+        <div class="wm-box"><i class="wm-wrap" data-orn="mandala"></i></div>
         <div class="lamps">
           <i class="pool" aria-hidden="true"></i>
           <button class="lamp" type="button" data-i="0" aria-pressed="false" aria-label="Light lamp 1 of 5"><span class="dp" data-deepam data-h="40"></span></button>
@@ -167,7 +168,6 @@
       <i class="tr"></i><i class="fuse" aria-hidden="true"></i><i class="bead"><i class="ring"></i></i>
       <span data-k="0" class="on">Then</span><span data-k="1">Now</span><span data-k="2">Forever</span>
     </div>
-    <div class="tn-rwrap"><button type="button" class="tn-replay" aria-label="Play our story again" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.6 4.7" /><path d="M5 4v5h5" /></svg><span>Play again</span></button></div>
     <p class="sr tn-status" aria-live="polite"></p>
   </div>
 </section>
@@ -178,11 +178,10 @@
     <p class="eyebrow" data-fact="event"></p>
     <p class="r-time" data-fact="date.time"></p>
     <span class="och dv-slot" data-orn="divider"></span>
-    <a class="venue" id="venue-link" target="_blank" rel="noopener" aria-label="Sri Sri Anandham Kalyana Mandapam, Coimbatore. Opens in Google Maps">
+    <div class="venue">
       <h2 class="r-venue" data-fact="venue.name"></h2>
       <p class="r-lines" id="v-lines"></p>
-      <span class="r-map"><span class="pin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><i class="rp"></i><i class="rp"></i><i class="rp"></i></span><span class="lbl">Open in Google Maps</span><svg class="ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5h5.5V8M9.5 2.5L3 9"/></svg></span>
-    </a>
+    </div>
     <div class="pk-stage stage och v-peacock" data-depth="1.2" aria-hidden="true"></div>
     <div class="stage och v-dove" data-depth="1.2" aria-hidden="true"><div class="dv-wreath dv-stage"></div></div>
     <a class="pill pill-kumkum foot" id="directions" target="_blank" rel="noopener" aria-label="Get directions to Sri Sri Anandham Kalyana Mandapam"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4z"/></svg>Get directions</a>

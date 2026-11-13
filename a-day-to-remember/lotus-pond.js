@@ -246,12 +246,12 @@ export function pondMotion(gsap, el) {
 
 // Builds the stage into a host (the date page's .grow): mandala clip, mandala, pond. Returns the motion controller.
 // F (optional) is the site's fills.js module: its glow() and glints() light the mandala like the wing mandalas.
-export function mountPond(host, { gsap, F, rm = false, state } = {}) {
+export function mountPond(host, { gsap, F, rm = false, state, phone = false } = {}) {
   host.innerHTML = `<div class="lp-stage"><div class="lp-wmc"><i class="lp-wm">${artMandala()}</i></div>${lotusPond(state || (rm ? 'open' : 'closed'))}</div>`;
   if (!document.querySelector('.lp-defs')) document.body.insertAdjacentHTML('afterbegin', pondDefs());
   const wm = host.querySelector('.lp-wm');
   wm.querySelector('svg').classList.add('wm-gilt');
-  if (F) { F.glow(wm); wm.insertAdjacentHTML('beforeend', F.glints(.8, MAND_SPOTS)); }
+  if (F) { F.glow(wm, { rings: phone ? 2 : 5 }); wm.insertAdjacentHTML('beforeend', F.glints(.8, phone ? MAND_SPOTS_PHONE : MAND_SPOTS)); }
   const ctl = pondMotion(gsap, host.querySelector('.lp'));
   if (rm) ctl.still();
   return ctl;
@@ -262,3 +262,4 @@ export const MAND_SPOTS = [
   [143, 214, 11, 3.0], [143, 316, 11, 0.9], [108, 202, 13, 1.9], [108, 248, 15, 0.3], [108, 292, 13, 2.4], [108, 338, 12, 1.0],
   [41, 250, 11, 2.2], [41, 300, 10, 0.7],
 ];
+export const MAND_SPOTS_PHONE = MAND_SPOTS.filter((_, k) => k % 2 === 0).slice(0, 6);

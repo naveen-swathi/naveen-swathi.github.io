@@ -28,7 +28,9 @@ export function initDoveBirds({ gsap, RM, WF = null }) {
     if (RM) { c.still(); wm?.still(); return; }
     c.prime(gsap);
     wm?.prime();
-    sec.addEventListener('pg:reveal', () => { c.enter(gsap); wm?.enter(); }, { once: true });
+    const enter = () => { c.enter(gsap); wm?.enter(); };
+    if (WF || id === 'invite') sec.addEventListener('pg:reveal', enter, { once: true });
+    else sec.addEventListener('pg:rest', () => setTimeout(enter, 350), { once: true });
     sec.addEventListener('pg:leave', () => { c.finish(); wm?.finish(); });
   });
 
@@ -64,6 +66,7 @@ export function initDoveBirds({ gsap, RM, WF = null }) {
       bloomed = true;
     },
     lift() { ctls.closing.lift(gsap); },
+    hold(on) { if (!RM) { PAGES.forEach((p) => ctls[p].hold?.(on)); sides.forEach((c) => c.hold?.(on)); } },
     live(id) { if (!RM) PAGES.forEach((p) => { ctls[p].live(p === id); wms[p]?.live(p === id); }); },
   };
 }

@@ -18,7 +18,6 @@ export function initThenNow({ gsap, RM, blossoms }) {
   let devTl = null;
   const knot = q('.tn-knot');
   const fuse = q('.fuse');
-  const replayBtn = q('.tn-replay');
   const statusEl = q('.tn-status');
   const html = document.documentElement;
   const resetKnot = () => {
@@ -38,7 +37,6 @@ export function initThenNow({ gsap, RM, blossoms }) {
   let rw = null;
   let finishRun = null;
   let replayCall = null;
-  let replayOn = false;
   const auto = { t: 0 };
   let kNow = -1;
 
@@ -107,25 +105,7 @@ export function initThenNow({ gsap, RM, blossoms }) {
   const say = (txt) => { statusEl.textContent = txt; };
   const hideFuse = () => { gsap.killTweensOf(fuse); gsap.to(fuse, { opacity: 0, duration: 0.2 }); };
 
-  function placeReplay() {
-    const pg = thread.parentElement.getBoundingClientRect();
-    const tr = thread.getBoundingClientRect();
-    replayBtn.style.top = `${(tr.bottom - pg.top + 2).toFixed(1)}px`;
-    return tr.bottom + 46 <= innerHeight - 24;
-  }
-  function showReplay() {
-    if (replayOn || driving || cur < 0.98 || !placeReplay()) return;
-    replayOn = true;
-    replayBtn.hidden = false;
-    gsap.to(replayBtn, { opacity: 1, duration: 0.6 });
-  }
-  function hideReplay() {
-    replayCall?.kill(); replayCall = null;
-    if (!replayOn) return;
-    replayOn = false;
-    gsap.killTweensOf(replayBtn);
-    gsap.to(replayBtn, { opacity: 0, duration: 0.2, onComplete: () => { if (!replayOn) replayBtn.hidden = true; } });
-  }
+  function cancelLoop() { replayCall?.kill(); replayCall = null; }
 
   // The r13 autoplay script, unchanged in shape; the whole timeline runs at SPEED (1.25x).
   function run({ lead = 0.4, video = false } = {}) {
@@ -156,7 +136,7 @@ export function initThenNow({ gsap, RM, blossoms }) {
         driving = false;
         ap = null;
         finishRun = null;
-        if (!video) replayCall = gsap.delayedCall(0.6, () => { replayCall = null; showReplay(); });
+        if (!video) replayCall = gsap.delayedCall(4, () => { replayCall = null; if (!sec.classList.contains('idle') && !document.hidden) replay(); });
         res();
       }, e + tail);
       finishRun = res;
@@ -175,7 +155,7 @@ export function initThenNow({ gsap, RM, blossoms }) {
 
   function replay() {
     if (driving) return;
-    hideReplay();
+    cancelLoop();
     driving = true;
     rw = gsap.fromTo(auto, { t: cur }, {
       t: 0, duration: 1 / SPEED, ease: 'power2.inOut', onUpdate: () => render(auto.t),
@@ -192,11 +172,10 @@ export function initThenNow({ gsap, RM, blossoms }) {
   }
 
   document.addEventListener('visibilitychange', () => { if (ap) ap.paused(document.hidden); });
-  replayBtn.addEventListener('click', replay);
 
   // Plays once the page has settled; leaving stops it and rewinds, so coming back plays it from the start.
   sec.addEventListener('pg:rest', () => { if (!played && !driving && !html.classList.contains('demo')) play(); });
-  sec.addEventListener('pg:leave', () => { if (driving) stopAuto(); bursted = false; played = false; undevelop(); hideReplay(); render(0); });
+  sec.addEventListener('pg:leave', () => { if (driving) stopAuto(); bursted = false; played = false; undevelop(); cancelLoop(); render(0); });
   sec.addEventListener('pg:reveal', () => {
     const ins = qa('.pl .in');
     const imgs = qa('.pl img').filter((im) => im.dataset.src && !(im.complete && im.naturalWidth > 1));
@@ -216,7 +195,7 @@ export function initThenNow({ gsap, RM, blossoms }) {
   build();
   let rb = 0;
   const rebuild = () => { cancelAnimationFrame(rb); rb = requestAnimationFrame(build); };
-  addEventListener('resize', () => { hideReplay(); rebuild(); });
+  addEventListener('resize', () => { cancelLoop(); rebuild(); });
   document.fonts?.ready.then(rebuild);
   return { rebuild, play, get t() { return cur; } };
 }

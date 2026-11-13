@@ -8,11 +8,13 @@ import { initScratch } from './scratch.js';
 import { initDeepams } from './deepam.js';
 import { createBlossoms, mulberry32 } from './blossoms.js';
 import { initThenNow } from './thennow.js';
-import { initDate, initBlessings, initReception, initClosing } from './pages-fx.js';
+import { initDate, initBlessings, initClosing } from './pages-fx.js';
 import { initExtras } from './extras.js';
 import { initGate } from './gate-seal.js';
 import { mountPond } from './lotus-pond.js';
 import { initDemo } from './demo.js';
+import { initLoops } from './loops.js';
+import { buildPeeks, placePeeks, phoneMQ } from './peek.js';
 
 const WEST = document.documentElement.dataset.look === 'western';
 const [WB, WF] = WEST ? await Promise.all([import('./border-western.js'), import('./fills-western.js')]) : [];
@@ -25,6 +27,7 @@ const AUTO = params.get('autoplay') === '1' || DEMO;
 const BIRD = document.documentElement.dataset.bird === 'dove' ? 'dove' : 'peacock';
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches || params.get('rm') === '1';
 if (RM) document.documentElement.classList.add('rm');
+const PHONE = phoneMQ().matches;
 history.scrollRestoration = 'manual';
 scrollTo(0, 0);
 
@@ -37,7 +40,6 @@ document.querySelectorAll('.parents').forEach((el) => {
 FACTS.venue.lines.forEach((l) => {
   $('#v-lines').append(Object.assign(document.createElement('span'), { textContent: l }));
 });
-$('#venue-link').href = FACTS.venue.maps;
 $('#directions').href = FACTS.venue.directions;
 $('#cl-num').innerHTML = FACTS.date.short.split(' · ').join('<i>·</i>');
 $('#lg-heart').setAttribute('d', heartPath());
@@ -56,8 +58,8 @@ if (!WEST) document.querySelectorAll('.ik-wm, .wm-wrap').forEach((host) => {
   const svg = host.querySelector('svg');
   if (!svg) return;
   svg.classList.add('wm-gilt');
-  F.glow(host);
-  host.insertAdjacentHTML('beforeend', F.glints(0.9, F.PAGE_SPOTS));
+  F.glow(host, { rings: PHONE ? 2 : 5 });
+  host.insertAdjacentHTML('beforeend', F.glints(0.9, PHONE ? F.PHONE_SPOTS : F.PAGE_SPOTS));
 });
 if (!WEST) document.body.insertAdjacentHTML('afterbegin', F.goldDefs());
 if (WEST) { document.body.insertAdjacentHTML('afterbegin', WB.westDefs()); $('#invite .gable-wrap')?.classList.add('w-crown'); }
@@ -102,7 +104,7 @@ new ResizeObserver(cord).observe($('#date .pg'));
 
 const gsap = window.gsap;
 gsap.registerPlugin(window.DrawSVGPlugin);
-const pond = POND ? mountPond(POND, { gsap, F, rm: RM }) : null;
+const pond = POND ? mountPond(POND, { gsap, F, rm: RM, phone: PHONE }) : null;
 const rng = VIDEO ? mulberry32(1212) : Math.random;
 const wineInk = () => getComputedStyle(document.documentElement).getPropertyValue('--wine').trim() || '#7A2145';
 const gilt = (sel, ink = wineInk()) => {
@@ -126,6 +128,9 @@ blossoms.setTarget(0);
 let hold = true;
 let held = null;
 const onLive = (id) => { birds.live(id); blossoms.setPage(id); if (id === 'date' && scratch.done) blossoms.setTarget(8); };
+const loops = initLoops({ RM });
+const PEEK = !WEST && PHONE;
+if (PEEK) buildPeeks(F, [...document.querySelectorAll('.page > .pg')]);
 const tn = initThenNow({ gsap, RM, blossoms });
 const dateFx = initDate({ gsap, RM, scratch: { get done() { return scratch.done; } }, blossoms, gilt });
 const scratch = initScratch({ gsap, RM, onReveal: () => { dateFx.onReveal(); birds.bloom(); pond?.bloom(); }, onTouch: dateFx.onTouch });
@@ -134,7 +139,9 @@ const pages = initPages({
   gsap, RM, VIDEO,
   hooks: {
     blockSwipe: (t) => !!t?.closest?.('#foil') && !scratch.done,
-    live: (id) => { if (hold) held = id; else onLive(id); },
+    live: (id, el) => { if (hold) held = id; else onLive(id); loops.thaw(el); },
+    leaving: (from, to, fromEl, toEl) => { birds.hold(true); loops.freeze(fromEl, toEl); blossoms.pause(); },
+    layout: (pgs) => { if (PEEK) placePeeks(pgs, unit()); },
     cross: blossoms.cross,
     invite: (tl) => {
       if (BIRD === 'peacock') {
@@ -156,8 +163,20 @@ const pages = initPages({
   },
 });
 blossoms.setScrollSource(() => pages.y);
+pages.pages.forEach((el) => el.addEventListener('pg:rest', () => {
+  birds.hold(false);
+  blossoms.resume();
+}));
+if (RM && PEEK) {
+  const pgs = [...document.querySelectorAll('.page > .pg')];
+  let pt = 0;
+  const again = () => { clearTimeout(pt); pt = setTimeout(() => placePeeks(pgs, unit()), 150); };
+  pgs.forEach((pg) => new ResizeObserver(again).observe(pg));
+  document.fonts?.ready.then(again);
+  addEventListener('resize', again);
+  placePeeks(pgs, unit());
+}
 initBlessings({ gsap, RM, VIDEO, deepams, blossoms });
-initReception({ gsap, RM });
 initClosing({ gsap, RM, VIDEO, deepams, blossoms, gilt, onShower: birds.lift });
 initExtras({ gsap, RM, blossoms });
 const onImg = (im) => new Promise((res) => {

@@ -15,7 +15,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     const kids = [...pg.children];
     return {
       el, i, pg, revealed: false, key: '', r: 0, over: 0,
-      crossed: null, rest: false, seen: false, live: false, idle: false, uoKey: '', pe: '',
+      crossed: null, rest: false, seen: false, live: false, uoKey: '', pe: '', warm: false, warmK: false,
       w: 0, o: 0,
       words: chan(kids.filter((c) => !c.classList.contains('och') && !c.matches('.sr'))),
       orn: chan(kids.filter((c) => c.classList.contains('och'))),
@@ -33,6 +33,30 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   let queued = false;
   let vw = 0;
   let vh = 0;
+  const warmSet = new Set();
+  const layerSet = new Set();
+  const kidSet = new Set();
+  const park = (p, on) => {
+    if (p.pg.inert === on) return false;
+    if (on) p.pg.setAttribute('aria-hidden', 'true'); else p.pg.removeAttribute('aria-hidden');
+    p.pg.inert = on;
+    return true;
+  };
+  // Restyle-heavy work (inert, visibility, .live: each restyles a whole page) never runs inside a dissolve: one task per frame after a move.
+  let pq = [];
+  let pr = 0;
+  let lastInput = 0;
+  let settling = false;
+  const shield = document.createElement('div');
+  shield.id = 'shield';
+  shield.hidden = true;
+  document.body.appendChild(shield);
+  const pump = () => {
+    pr = 0;
+    while (pq.length && !busy) { if (pq.shift()() !== false) break; }
+    if (pq.length && !busy) pr = requestAnimationFrame(pump);
+  };
+  const later = (fn) => { pq.push(fn); if (!pr) pr = requestAnimationFrame(pump); };
 
   const lines = (p) => [...p.el.querySelectorAll('.li')].filter((l) => !l.closest('.defer'));
   const fades = (p) => [...p.el.querySelectorAll('.fade')];
@@ -51,8 +75,8 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     p.revealed = true;
     const first = p.i === 0;
     const ls = lines(p);
-    if (ls.length) gsap.fromTo(ls, { yPercent: 108, opacity: 0, filter: 'blur(5px)' },
-      { yPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 1.1, ease: 'power3.out', stagger: 0.12, delay: first ? 0.7 : lead, clearProps: 'filter' });
+    if (ls.length) gsap.fromTo(ls, { yPercent: 108, opacity: 0 },
+      { yPercent: 0, opacity: 1, duration: 1.1, ease: 'power3.out', stagger: 0.12, delay: first ? 0.7 : lead });
     fire(p.el, 'pg:reveal', { first });
     fades(p).forEach((f, k) => whenLoaded(f, () => gsap.to(f, { '--fo': 1, duration: 1.3, ease: 'power2.out', delay: first ? 0.4 + k * 0.9 : Math.max(0, lead - 0.15) + k * 0.12 })));
   }
@@ -84,6 +108,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
       p.r = y;
       y += p.over + GAP * vh;
     });
+    if (!busy) hooks.layout?.(pages.map((p) => p.pg));
   }
   // Steps: one per page, plus a "deep" step for a page that overflows.
   const steps = () => pages.flatMap((p) => (p.over > 8 ? [{ p, y: p.r }, { p, y: p.r + p.over }] : [{ p, y: p.r }]));
@@ -110,8 +135,6 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     if (!started) return;
     const G = GAP * vh;
     const d = vh * DRIFT;
-    let liveP = null;
-    let liveOp = 0.02;
     for (const p of pages) {
       const y = yOf(p);
       const isLast = p.i === last;
@@ -131,22 +154,24 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
       const sc = (1 + 0.02 * (1 - oIn)) * (1 - 0.025 * oOut);
       const off = p === st.A && st.offA !== null ? st.offA : p === st.B && st.offB !== null ? st.offB : -range(y - p.r, 0, p.over);
       const ty = off + (1 - oIn) * vh * 0.04 - oOut * vh * 0.03;
-      const key = `${any > 0 ? 1 : 0}|${ty.toFixed(1)}|${sc.toFixed(4)}`;
+      const warm = any > 0 || warmSet.has(p);
+      const lay = any > 0 || layerSet.has(p);
+      const kid = any > 0 || kidSet.has(p);
+      const key = `${any > 0 ? 1 : 0}${warm ? 1 : 0}${lay ? 1 : 0}${kid ? 1 : 0}|${ty.toFixed(1)}|${sc.toFixed(4)}`;
       if (key !== p.key) {
         p.key = key;
         p.pg.style.opacity = any > 0 ? '1' : '0';
-        p.pg.style.visibility = any > 0 ? '' : 'hidden';
+        p.pg.style.visibility = warm ? '' : 'hidden';
+        if (lay !== p.warm) { p.warm = lay; p.pg.classList.toggle('warm', lay); }
+        if (kid !== p.warmK) { p.warmK = kid; p.pg.classList.toggle('warm-k', kid); }
         p.pg.style.setProperty('--ty', `${ty.toFixed(1)}px`);
         p.pg.style.transform = sc === 1 ? `translate3d(0,${ty.toFixed(1)}px,0)` : `translate3d(0,${ty.toFixed(1)}px,0) scale(${sc.toFixed(4)})`;
       }
       const pe = w > 0.6 ? 'auto' : 'none';
-      if (pe !== p.pe) { p.pe = pe; p.pg.style.pointerEvents = pe; p.pg.classList.toggle('on', pe === 'auto'); }
+      if (pe !== p.pe) { p.pe = pe; p.pg.style.pointerEvents = pe; }
       put(p.words, w);
       put(p.orn, o);
       if (!p.revealed && wIn > 0.02) reveal(p);
-      if (any > liveOp) { liveOp = any; liveP = p; }
-      const idle = any === 0;
-      if (idle !== p.idle) { p.idle = idle; p.el.classList.toggle('idle', idle); }
 
       const moving = (oIn > 0 && oIn < 1) || (oOut > 0 && oOut < 1);
       const k0 = (1 - oIn) * d - oOut * d;
@@ -175,13 +200,9 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
       else if (crossed !== p.crossed) { p.crossed = crossed; hooks.cross?.(p, false); }
 
       const rest = w > 0.98 && wOut < 0.02 && !busy;
-      if (rest !== p.rest) { p.rest = rest; if (rest) fire(p.el, 'pg:rest'); }
+      if (rest !== p.rest) { p.rest = rest; if (rest) later(() => { if (p.rest) fire(p.el, 'pg:rest'); }); }
       if (any > 0) p.seen = true;
       else if (p.seen) { p.seen = false; fire(p.el, 'pg:leave'); }
-    }
-    if (liveP && !liveP.live) {
-      pages.forEach((q) => { if (q.live !== (q === liveP)) { q.live = q === liveP; q.el.classList.toggle('live', q.live); } });
-      hooks.live?.(liveP.el.id);
     }
     const ck = (1 - pages[0].o).toFixed(3);
     if (ck !== crestKey) { crestKey = ck; frame?.style.setProperty('--crest', ck); }
@@ -210,6 +231,19 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   let stale = false;
   const nx = document.getElementById('nx');
   const srEl = document.getElementById('pgsr');
+  const dots = document.getElementById('pdots');
+  if (dots) dots.innerHTML = pages.map(() => '<i></i>').join('');
+  dots?.addEventListener('click', (e) => { const i = [...dots.children].indexOf(e.target); if (i >= 0) goPage(pages[i].el); });
+  let nudges = 0;
+  let nudgeT = 0;
+  // Until the guest first moves, the page lifts a little and settles, at most three times.
+  function nudge() {
+    if (navigated || busy || VIDEO || RM) return;
+    if (document.body.matches('.locked, .opening')) { nudgeT = setTimeout(nudge, 1500); return; }
+    nudges++;
+    steps()[at].p.pg.animate([{ translate: '0 0' }, { translate: '0 -12px', offset: 0.45 }, { translate: '0 0' }], { duration: 1100, easing: 'cubic-bezier(.45,0,.3,1)' });
+    if (nudges < 3) nudgeT = setTimeout(nudge, 7000);
+  }
 
   const DUR = VIDEO ? 1.4 : 1.1;
   const DEEP = 0.75;
@@ -229,7 +263,10 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     busy = true;
     navigated = true;
     at = k;
-    hooks.leaving?.(from.p.el.id, to.p.el.id);
+    pq = [];
+    cancelWarm();
+    shield.hidden = false;
+    hooks.leaving?.(from.p.el.id, to.p.el.id, from.p.el, to.p.el);
     const P = { T: 0 };
     const D = RM ? 0 : (dur ?? (same ? DEEP : DUR));
     if (!same && !to.p.revealed) reveal(to.p, 0.45 * D);
@@ -253,8 +290,8 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
           busy = false;
           if (stale) { stale = false; relayout(); }
           update();
-          settleFocus(to.p);
           nxState();
+          settle(steps()[at].p);
           res();
           if (pending !== null) { const n = pending; pending = null; go(n); }
         },
@@ -265,10 +302,65 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   const step = (dir) => go(busy ? (pending ?? at) + dir : at + dir);
   const goPage = (el, deep = false) => go(stepIndex(pages.find((p) => p.el === el), deep));
 
+  // After a move, one task per frame: new page (unpark + live) and old pages (park + not live) one restyle each, then the live hook and focus (far pages are parked in the idle warm-up).
+  function settle(tp) {
+    warmSet.add(tp);
+    layerSet.add(tp);
+    kidSet.add(tp);
+    const flip = (q, on) => { const a = park(q, !on); const b = q.live !== on; if (b) { q.live = on; q.el.classList.toggle('live', on); } return a || b; };
+    later(() => flip(tp, true));
+    pages.forEach((q) => { if (q !== tp) later(() => flip(q, false)); });
+    later(() => { hooks.live?.(tp.el.id, tp.el); });
+    later(() => { settleFocus(tp); return false; });
+    later(() => { shield.hidden = true; warmSoon(); return false; });
+  }
+  function setLive(q, on) {
+    if (q.live === on) return false;
+    q.live = on;
+    q.el.classList.toggle('live', on);
+    if (on) hooks.live?.(q.el.id, q.el);
+  }
+
+  // Idle time after a move (or after the opening): the neighbouring pages are warmed off-screen so the next move does not pay for it.
+  // One small step per idle slice (visible, page layer, child layers, decode), never while the visitor is interacting.
+  let wt = 0;
+  let wi = 0;
+  let wtok = 0;
+  function cancelWarm() { clearTimeout(wt); if (wi && window.cancelIdleCallback) cancelIdleCallback(wi); wi = 0; wtok++; }
+  function warmSoon(wait = 900) {
+    cancelWarm();
+    const tok = wtok;
+    const idle = (fn) => {
+      if (!window.requestIdleCallback) { wt = setTimeout(() => { if (tok === wtok && !busy) fn(); }, 80); return; }
+      wi = requestIdleCallback((d) => {
+        wi = 0;
+        if (tok !== wtok || busy) return;
+        if (!d.didTimeout && d.timeRemaining() < 8) idle(fn); else fn();
+      }, { timeout: 1500 });
+    };
+    const slice = () => {
+      if (performance.now() - lastInput < 1500) { wt = setTimeout(slice, 600); return; }
+      const cur = steps()[at].p;
+      const far = pages.find((x) => Math.abs(x.i - cur.i) > 1 && (warmSet.has(x) || layerSet.has(x) || kidSet.has(x)));
+      if (far) { warmSet.delete(far); layerSet.delete(far); kidSet.delete(far); update(); idle(slice); return; }
+      const q = pages.find((x) => Math.abs(x.i - cur.i) === 1 && !kidSet.has(x));
+      if (!q) return;
+      if (!warmSet.has(q)) { warmSet.add(q); update(); idle(slice); return; }
+      if (!layerSet.has(q)) { layerSet.add(q); update(); idle(slice); return; }
+      kidSet.add(q);
+      update();
+      idle(() => {
+        q.el.querySelectorAll('img').forEach((im) => { if (im.complete && im.naturalWidth > 1) im.decode?.().catch(() => {}); });
+        idle(slice);
+      });
+    };
+    wt = setTimeout(() => idle(slice), wait);
+  }
+
   // After a move, focus must not stay on a control of a page that is no longer shown.
   function settleFocus(p) {
     const a = document.activeElement;
-    if (a && a !== document.body && !p.el.contains(a) && a.closest?.('.page')) { p.pg.tabIndex = -1; p.pg.focus({ preventScroll: true }); }
+    if (a && a !== document.body && !p.el.contains(a) && a.closest?.('.page')) { p.pg.tabIndex = -1; settling = true; p.pg.focus({ preventScroll: true }); settling = false; }
     if (srEl) srEl.textContent = p.el.getAttribute('aria-label') || '';
   }
   function nxState() {
@@ -277,6 +369,10 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     if (endOf && document.activeElement === nx) { const p = steps()[at].p; p.pg.tabIndex = -1; p.pg.focus({ preventScroll: true }); }
     nx.hidden = endOf;
     nx.classList.toggle('cue', !navigated);
+    const pi = pages.indexOf(steps()[at].p);
+    [...(dots?.children || [])].forEach((d, i) => d.classList.toggle('on', i === pi));
+    clearTimeout(nudgeT);
+    if (!navigated && nudges < 3) nudgeT = setTimeout(nudge, 3500);
   }
 
   // ---- input ----
@@ -287,6 +383,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   // trackpad flick never starts a second step, but a clearly new swipe inside the tail (3x the tail's smallest delta) does.
   let acc = 0, lastT = 0, minMag = Infinity, armed = true;
   addEventListener('wheel', (ev) => {
+    lastInput = performance.now();
     if (inGate() || ev.ctrlKey) return;
     ev.preventDefault();
     const now = performance.now();
@@ -309,6 +406,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   // Touch: a vertical swipe of 56 px (or a 24 px flick faster than 0.3 px/ms) is one step; nothing follows the finger.
   let t0 = null;
   addEventListener('touchstart', (ev) => {
+    lastInput = performance.now();
     if (ev.touches.length !== 1 || inGate()) { t0 = null; return; }
     const t = ev.touches[0];
     t0 = blocked(ev.target) ? null : { x: t.clientX, y: t.clientY, t: performance.now(), done: false };
@@ -333,6 +431,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   addEventListener('touchcancel', () => { t0 = null; }, { passive: true });
 
   addEventListener('keydown', (ev) => {
+    lastInput = performance.now();
     if (inGate() || ev.defaultPrevented || ev.repeat || ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const t = ev.target;
     const onControl = t?.closest?.('button, a, [role="button"], input, textarea, select');
@@ -351,7 +450,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
 
   addEventListener('focusin', (ev) => {
     const p = pages.find((q) => q.el.contains(ev.target));
-    if (!p || !started || busy) return;
+    if (!p || !started || busy || settling) return;
     const deep = p.over > 8 && ev.target.getBoundingClientRect().bottom > innerHeight - 8;
     const k = stepIndex(p, deep);
     if (k !== at) go(k);
@@ -383,8 +482,12 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
       st.A = pages[0]; st.yA = 0;
       gsap.to(intro, { v: 1, duration: 0.9, ease: 'power1.inOut', onUpdate: update, onComplete: update });
       drawInvite();
+      pages.forEach((q) => park(q, q !== pages[0]));
+      warmSet.add(pages[0]);
       update();
+      setLive(pages[0], true);
       nxState();
+      warmSoon(2500);
     },
     pages: pages.map((p) => p.el),
     go: (k, o) => go(k, o),

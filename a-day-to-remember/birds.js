@@ -59,6 +59,7 @@ function initPeacock({ gsap, RM, WF }) {
   return {
     bloom() { if (!RM) ctls.date.bloom(); },
     lift() {},
+    hold() {},
     live(id) { PAGES.forEach((p) => { ctls[p].live(p === id); wms[p]?.live(p === id); }); },
   };
 }

@@ -123,6 +123,7 @@ const SPOTS = [
   [108, 34, 13, 1.0], [108, 82, 15, 1.9], [108, 160, 12, 0.4], [108, 214, 14, 2.4], [108, 262, 15, 2.9], [41, 30, 12, 1.1], [41, 120, 11, 2.2], [41, 210, 11, 3.0],
 ];
 export const PAGE_SPOTS = SPOTS.filter((_, k) => k % 3 === 0);
+export const PHONE_SPOTS = [0, 6, 12].map((k) => SPOTS[k]);
 export function glints(scale = 1, list = SPOTS) {
   return list.map(([r, a, s, d], k) => {
     const x = 50 + (r / 4) * Math.cos((a * Math.PI) / 180);
@@ -134,10 +135,10 @@ export function glints(scale = 1, list = SPOTS) {
 // Living glow for a mandala host (a positioned box holding one svg): a breathing halo and a slow light wedge behind the lines,
 // and a bright run of light travelling along the five main rings (stroke-dashoffset on clones of the gold lines, no filters).
 const RUNS = [[5.6, -1], [7.4, 1], [6.6, -1], [8.2, 1], [6.0, -1]];
-export function glow(host) {
+export function glow(host, { rings = 5 } = {}) {
   const svg = host.querySelector('svg');
   if (!svg || host.querySelector('.wm-halo')) return;
-  const pick = [...svg.querySelectorAll('g.wm > *')].filter((e) => !e.getAttribute('stroke-width')).slice(0, 5);
+  const pick = [...svg.querySelectorAll('g.wm > *')].filter((e) => !e.getAttribute('stroke-width')).slice(0, rings);
   const clone = (cls) => pick.map((e, i) => {
     const c = e.cloneNode(false);
     c.setAttribute('pathLength', '1');
@@ -152,7 +153,7 @@ export function glow(host) {
 }
 
 // Wraps an existing mandala host: the svg turns slowly inside .wm-turn, the glints ride with it.
-export function glitter(host, { scale = 1, list } = {}) {
+export function glitter(host, { scale = 1, list, rings } = {}) {
   const svg = host.querySelector('svg');
   if (!svg || host.querySelector('.wm-turn')) return;
   const turn = document.createElement('div');
@@ -161,5 +162,5 @@ export function glitter(host, { scale = 1, list } = {}) {
   turn.append(svg);
   turn.insertAdjacentHTML('beforeend', glints(scale, list));
   svg.classList.add('wm-gilt');
-  glow(host);
+  glow(host, { rings });
 }

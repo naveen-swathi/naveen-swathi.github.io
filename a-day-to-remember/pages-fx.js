@@ -114,19 +114,6 @@ export function initBlessings({ gsap, RM, VIDEO, deepams, blossoms }) {
   sec.addEventListener('pg:leave', () => { auto?.kill(); auto = null; });
 }
 
-export function initReception({ gsap, RM }) {
-  const sec = $('#reception');
-  const map = $('.r-map', sec);
-  if (RM) return;
-  once(sec, 'pg:reveal', () => {
-    gsap.delayedCall(1.3, () => {
-      gsap.fromTo($('.pin svg', map), { y: -8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'back.out(2)' });
-      map.classList.add('on', 'ping');
-      gsap.delayedCall(3.2, () => { map.classList.remove('ping'); map.classList.add('rest'); });
-    });
-  });
-}
-
 export function initClosing({ gsap, RM, VIDEO, deepams, blossoms, gilt, onShower = () => {} }) {
   const sec = $('#closing');
   const dps = [...sec.querySelectorAll('.cl-row .dp')];
