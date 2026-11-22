@@ -246,25 +246,49 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
   }
   const lift = (p, px, ms) => p.pg.animate([{ translate: '0 0' }, { translate: `0 -${px}px`, offset: 0.45 }, { translate: '0 0' }], { duration: ms, easing: 'cubic-bezier(.45,0,.3,1)' });
 
-  // Idle ladder: pages 2+ lift after 8 s without input and show the swipe hand after 20 s; page 1 shows the hand once the card has landed.
-  const hand = document.getElementById('hand');
-  const hinting = !!hand && !AUTO && !VIDEO;
+  // Idle ladder: pages 2+ lift after 8 s without input and show the swipe cue after 20 s; page 1 shows the cue once the card has landed.
+  const cue = document.getElementById('cue');
+  const hinting = !!cue && !AUTO && !VIDEO;
   let idle8 = 0;
   let idle20 = 0;
   let h1 = 0;
-  let handT = 0;
-  let handOn = false;
-  const HAND_KEEP = 'button, a, .scratch, .card, .tn-stage, .tn-thread, .lamps, .cl-lock, .dp';
-  function placeHand() {
-    ['--hand-x', '--hand-y', '--w', '--tr'].forEach((n) => hand.style.removeProperty(n));
+  let cueT = 0;
+  let cueOn = false;
+  let cued = false;
+  const CUE_KEEP = 'button, a, .scratch, .card, .tn-stage, .tn-thread, .lamps, .cl-lock, .dp, img, figure, .pkm, .tn-lines, .logo, .dp-flame';
+  const CUE_INK = '.lp, .dv-carry, .dv-stage, .pk-stage, [data-orn="ikolam"], [data-orn="threshold"], [data-orn="lkolam"], [data-orn="gable"], [data-orn="divider"], [data-orn="dlotus"]';
+  const shown = (e, root) => { for (let n = e; n && n !== root; n = n.parentElement) { const s = getComputedStyle(n); if (n.hidden || s.display === 'none' || s.visibility === 'hidden' || +s.opacity < 0.05) return false; } return true; };
+  function placeCue() {
     const pg = steps()[at].p.pg;
     const vh = innerHeight;
     const vw = innerWidth;
-    const w = parseFloat(getComputedStyle(hand.querySelector('.hd-fig')).width);
-    const tr = parseFloat(getComputedStyle(hand.querySelector('.hd-trail')).height);
-    if (!w || !tr) return;
-    const H = tr + w * 1.5;
-    const GAP = 8;
+    const set = (x, y, d) => { cue.style.setProperty('--cue-x', `${x.toFixed(1)}px`); cue.style.setProperty('--cue-y', `${y.toFixed(1)}px`); cue.style.setProperty('--cue-d', `${d}px`); };
+    if (pg.parentElement.id === 'invite') {
+      const k = pg.querySelector('[data-orn="ikolam"] svg');
+      const fl = pg.querySelectorAll('.thresh-wrap .dp');
+      if (k && fl.length) {
+        const kr = k.getBoundingClientRect();
+        let kb = -1e9;
+        k.querySelectorAll('path,circle,ellipse,line,rect').forEach((e) => { const b = e.getBoundingClientRect(); if (b.width || b.height) kb = Math.max(kb, b.bottom); });
+        let ft = 1e9;
+        fl.forEach((e) => { ft = Math.min(ft, e.getBoundingClientRect().top); });
+        const gap = ft - kb;
+        const c = gap >= 96 ? 20 : gap < 80 ? 12 : 14;
+        const d = Math.min(80, gap - 2 * c);
+        if (d >= 36) { set(kr.left + kr.width / 2, ft - c, d); return true; }
+        const cx = kr.left + kr.width / 2;
+        const inCol = (b) => b.right > cx - 14 && b.left < cx + 14;
+        let top = -1e9;
+        k.querySelectorAll('path,circle,ellipse,line,rect').forEach((e) => { const b = e.getBoundingClientRect(); if (b.width && b.height && b.width < 120 && b.height < 120 && inCol(b)) top = Math.max(top, b.bottom); });
+        const th = pg.querySelector('[data-orn="threshold"]');
+        let base = th ? th.getBoundingClientRect().top : -1e9;
+        fl.forEach((e) => { const b = e.getBoundingClientRect(); if (inCol(b)) base = Math.min(base, b.top); });
+        const g = base - top - 4;
+        const c2 = g >= 96 ? 20 : g < 70 ? 10 : g < 80 ? 12 : 14;
+        const d2 = Math.min(80, g - 2 * c2);
+        if (d2 >= 36) { set(cx, base - c2, d2); return true; }
+      }
+    }
     const probe = document.createElement('div');
     probe.style.cssText = 'position:fixed;visibility:hidden;width:var(--u);padding-bottom:env(safe-area-inset-bottom)';
     document.body.appendChild(probe);
@@ -274,66 +298,89 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
     const pr = pg.getBoundingClientRect();
     const colL = Math.max(0, pr.left) + 50 * u;
     const colR = Math.min(vw, pr.right) - 50 * u;
-    const top = Math.max(GAP, 92 * u);
+    const top = Math.max(8, 92 * u);
+    const GAP = 6;
+    const HALF = 16;
     const obs = [];
     const add = (b) => { if (b.width > 1 && b.height > 1) obs.push(b); };
     const tw = document.createTreeWalker(pg, NodeFilter.SHOW_TEXT);
     for (let n; (n = tw.nextNode());) {
       if (!n.textContent.trim()) continue;
       const el = n.parentElement;
-      if (el.closest('.sr') || getComputedStyle(el).display === 'none') continue;
+      if (el.closest('.sr, .tn-lines') || !shown(el, pg.parentElement)) continue;
       const rg = document.createRange();
       rg.selectNodeContents(n);
       for (const q of rg.getClientRects()) add(q);
     }
-    pg.querySelectorAll(HAND_KEEP).forEach((e) => { if (getComputedStyle(e).display !== 'none' && !e.closest('[hidden]')) add(e.getBoundingClientRect()); });
+    const flat = (e) => {
+      let x = 0;
+      let y = 0;
+      for (let n = e; n && n !== pg; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+      return { left: pr.left + x, top: pr.top + y, right: pr.left + x + e.offsetWidth, bottom: pr.top + y + e.offsetHeight, width: e.offsetWidth, height: e.offsetHeight };
+    };
+    pg.querySelectorAll(CUE_KEEP).forEach((e) => {
+      if (!shown(e, pg.parentElement) || e.closest('.tn-lines') && !e.matches('.tn-lines') || (e.closest('.tn-stage') && !e.matches('.tn-stage'))) return;
+      add(e.matches('.tn-stage, .tn-lines') ? flat(e) : e.getBoundingClientRect());
+    });
+    const inks = [];
+    pg.querySelectorAll(CUE_INK).forEach((e) => { if (e.matches('.pk-stage')) inks.push(...e.querySelectorAll('.pk'), ...[...e.children].filter((c) => !c.querySelector('.pk'))); else inks.push(e); });
+    inks.forEach((e) => {
+      if (!shown(e, pg.parentElement)) return;
+      const b = e.getBoundingClientRect();
+      const ink = { left: 1e9, top: 1e9, right: -1e9, bottom: -1e9 };
+      e.querySelectorAll('path, circle, ellipse, rect, line, polygon, image, img').forEach((s) => {
+        const q = s.getBoundingClientRect();
+        if (!q.width || !q.height || q.width > b.width * 0.8 || q.height > b.height * 0.8 || !shown(s, e)) return;
+        ink.left = Math.min(ink.left, q.left); ink.top = Math.min(ink.top, q.top); ink.right = Math.max(ink.right, q.right); ink.bottom = Math.max(ink.bottom, q.bottom);
+      });
+      if (e.matches('.pk, .dv-stage, .dv-carry')) { e.querySelectorAll('path, circle, ellipse, rect, line, polygon').forEach((s) => { const q = s.getBoundingClientRect(); if (q.width && q.height && q.width <= b.width * 0.8 && q.height <= b.height * 0.8 && shown(s, e)) add({ left: q.left - 8, top: q.top - 8, right: q.right + 8, bottom: q.bottom + 8, width: q.width + 16, height: q.height + 16 }); }); return; }
+      if (ink.right > ink.left) add({ left: ink.left - 14, top: ink.top - 14, right: ink.right + 14, bottom: ink.bottom + 14, width: ink.right - ink.left + 28, height: ink.bottom - ink.top + 28 });
+    });
     ['#nx', '#music', '#pdots'].forEach((q) => { const e = document.querySelector(q); if (e && getComputedStyle(e).display !== 'none' && !e.hidden) add(e.getBoundingClientRect()); });
-    const cands = [(colL + colR) / 2, colL + w * 0.6, colR - w * 0.6];
+    document.querySelectorAll('#frame .cf').forEach((e) => { const b = e.getBoundingClientRect(); if (b.width && b.height) add({ left: b.left - 6, top: b.top - 6, right: b.right + 6, bottom: b.bottom + 6, width: b.width + 12, height: b.height + 12 }); });
     let best = null;
-    for (const cx of cands) {
-      const x0 = cx - w * 0.6 - GAP;
-      const x1 = cx + w * 0.6 + GAP;
+    for (const cx of [0, -0.15, 0.15, -0.3, 0.3].map((f) => (colL + colR) / 2 + f * (colR - colL))) {
+      const x0 = cx - HALF - GAP;
+      const x1 = cx + HALF + GAP;
       const ys = obs.filter((b) => b.right > x0 && b.left < x1 && b.bottom > 0 && b.top < vh).map((b) => [b.top - GAP, b.bottom + GAP]).sort((a, b) => a[0] - b[0]);
       const bands = [];
       let y = top;
-      for (const [t, b] of ys) { if (t > y) bands.push([y, t]); y = Math.max(y, b); }
+      for (const [t, b] of ys) { if (t >= floor) break; if (t > y) bands.push([y, t]); y = Math.max(y, b); }
       if (floor > y) bands.push([y, floor]);
-      const fit = bands.filter(([t, b]) => b - t >= H * 0.8).pop();
-      if (!fit) continue;
-      const band = fit;
-      const s = Math.min(1, (band[1] - band[0]) / H);
-      if (!best || s > best.s) best = { cx, band, s };
-      if (s === 1) break;
+      const fit = bands.filter(([t, b]) => b - t >= 66 && b >= vh / 2).pop();
+      if (fit) { best = { cx, y1: fit[1], g: fit[1] - fit[0] }; break; }
     }
-    if (!best) return;
-    const { cx, band, s } = best;
-    if (s < 1) { hand.style.setProperty('--w', `${w * s}px`); hand.style.setProperty('--tr', `${-tr * s}px`); }
-    const anchorY = band[1] - w * s * 1.422;
-    hand.style.setProperty('--hand-y', `${vh - anchorY}px`);
-    if (Math.abs(cx - vw / 2) > 1) hand.style.setProperty('--hand-x', `${cx}px`);
+    if (!best) return false;
+    const C = best.g < 71 ? 8 : 13;
+    set(best.cx, best.y1 - C, Math.min(80, best.g - C - 14));
+    return true;
   }
-  const showHand = (on) => {
-    if (handOn === on) return;
-    handOn = on;
-    clearTimeout(handT);
-    if (on) { placeHand(); hand.classList.remove('out'); hand.classList.add('on'); } else { hand.classList.add('out'); handT = setTimeout(() => hand.classList.remove('on', 'out'), 400); }
+  const showCue = (on) => {
+    if (cueOn === on) return;
+    if (on && !placeCue()) return;
+    cueOn = on;
+    if (on) cued = true;
+    clearTimeout(cueT);
+    if (on) { cue.classList.remove('out'); cue.classList.add('on'); } else { cue.classList.add('out'); cueT = setTimeout(() => cue.classList.remove('on', 'out'), 400); }
   };
   const isLocked = (p) => !AUTO && !!hooks.locked?.(p.el);
   function arm() {
     clearTimeout(idle8);
     clearTimeout(idle20);
     if (!hinting) return;
-    showHand(false);
+    showCue(false);
     if (!started || busy || inGate()) return;
     const p = steps()[at].p;
     if (p.i === last || isLocked(p)) return;
     if (p.i > 0) idle8 = setTimeout(() => { if (!busy && p.live) lift(p, 12, 1100); }, 8000);
-    idle20 = setTimeout(() => { if (!busy && p.live) showHand(true); }, 20000);
+    idle20 = setTimeout(() => { if (!busy && p.live) showCue(true); }, 20000);
   }
-  const firstHand = () => {
+  let fc = 0;
+  const firstCue = () => {
     if (navigated) return;
-    if (inGate() || document.body.matches('.locked, .opening')) { h1 = setTimeout(firstHand, 400); return; }
-    showHand(true);
+    if (inGate() || document.body.matches('.locked, .opening')) { h1 = setTimeout(firstCue, 400); return; }
+    showCue(true);
+    if (!cueOn && ++fc < 5) h1 = setTimeout(firstCue, 1200);
   };
   const touched = () => { lastInput = performance.now(); if (hinting && !inGate() && (navigated || at > 0)) arm(); };
 
@@ -589,9 +636,13 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
     const S = steps();
     st.A = S[at].p; st.yA = S[at].y; st.B = null;
     schedule();
+    requestAnimationFrame(() => {
+      if (cueOn && !placeCue()) showCue(false);
+      if (hinting && !cueOn && (cued || fc >= 5) && !navigated && at === 0 && started) { fc = 0; clearTimeout(h1); h1 = setTimeout(firstCue, 400); }
+    });
   };
   let rt = 0;
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { relayout(); if (handOn) placeHand(); }, 120); });
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(relayout, 120); });
   addEventListener('relayout', relayout);
   pages.forEach((p) => new ResizeObserver(() => { if (!started) return; if (busy) stale = true; else relayout(); }).observe(p.pg));
   document.fonts?.ready.then(relayout);
@@ -610,7 +661,7 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
       setLive(pages[0], true);
       nxState();
       warmSoon(2500);
-      if (hinting) h1 = setTimeout(firstHand, 4400);
+      if (hinting) h1 = setTimeout(firstCue, 4400);
     },
     pages: pages.map((p) => p.el),
     go: (k, o) => go(k, o),
