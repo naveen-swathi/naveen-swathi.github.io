@@ -286,6 +286,43 @@ body:is(.locked, .opening) .nx, .video .nx, .rm .nx, html:not(.js) .nx { display
 body:is(.locked, .opening) .pdots, .video .pdots, .rm .pdots, html:not(.js) .pdots { display: none; }
 @media (orientation: landscape) and (max-height: 500px) { .pdots { display: none; } }
 
+.hand { --w: clamp(26px, calc(31 * var(--u)), 36px); --tr: clamp(-64px, calc(-52 * var(--u)), -44px); position: fixed; z-index: 7; left: var(--hand-x, 50%); bottom: var(--hand-y, calc(32 * var(--svh))); width: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity .35s ease; }
+.hand.on:not(.out) { opacity: 1; }
+.hd-fig { position: absolute; left: calc(var(--w) * -.406); top: calc(var(--w) * -.078); width: var(--w); height: calc(var(--w) * 1.5); overflow: visible; filter: drop-shadow(0 0 3px rgba(235,208,143,.85)); opacity: 0; }
+.hd-body { fill: var(--pearl); fill-opacity: .38; stroke: url(#hd-g); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.hd-crease { fill: none; stroke: var(--gold); stroke-width: .8; stroke-linecap: round; opacity: .6; }
+.hd-tip { fill: none; stroke: var(--gold-hi); stroke-width: .8; opacity: .8; }
+.hd-s0 { stop-color: var(--gold); }
+.hd-s1 { stop-color: var(--gold); stop-opacity: 0; }
+.hd-trail { position: absolute; left: -1.5px; bottom: 0; width: 3px; height: calc(var(--tr) * -1); border-radius: 2px; background: linear-gradient(to top, transparent, var(--gold) 65%, var(--gold-hi)); box-shadow: 0 0 10px 2px rgba(235,208,143,.4); transform-origin: 50% 100%; transform: scaleY(0); opacity: 0; }
+.hand.on .hd-fig { animation: hd-fig 6.6s linear infinite; }
+.hand.on .hd-trail { animation: hd-trail 6.6s linear infinite; }
+.hand.out .hd-fig, .hand.out .hd-trail { animation-play-state: paused; }
+@keyframes hd-fig {
+  0%, 34% { opacity: 0; transform: translateY(0) scale(.94); }
+  4%, 38% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(.5,0,.2,1); }
+  22%, 56% { opacity: 1; transform: translateY(var(--tr)) scale(1); }
+  29%, 63% { opacity: 0; transform: translateY(var(--tr)) scale(1); }
+  29.01%, 63.01%, 100% { opacity: 0; transform: translateY(0) scale(.94); }
+}
+@keyframes hd-trail {
+  0%, 34% { opacity: 0; transform: scaleY(0); }
+  4%, 38% { opacity: .9; transform: scaleY(0); animation-timing-function: cubic-bezier(.5,0,.2,1); }
+  22%, 56% { opacity: .85; transform: scaleY(1); }
+  31%, 65% { opacity: 0; transform: scaleY(1); }
+  31.01%, 65.01%, 100% { opacity: 0; transform: scaleY(0); }
+}
+.rm .hand, .video .hand, html:not(.js) .hand { display: none; }
+@media (orientation: landscape) and (max-height: 500px) { .hand { display: none; } }
+.wick { position: absolute; left: calc(var(--wx) * 1%); top: calc(var(--wy) * 1%); width: 0; height: 0; pointer-events: none; }
+.wick b { position: absolute; left: calc(var(--w) * -.07); top: calc(var(--w) * -.07); width: calc(var(--w) * .14); aspect-ratio: 1; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 8px 2px rgba(235,208,143,.7); opacity: .4; }
+.dp.beckon .wick b { animation: wick-b 2.4s ease-in-out infinite; }
+.dp.lit .wick, .rm .wick { display: none; }
+.page:not(.live) .wick b { animation-play-state: paused; }
+@keyframes wick-b { 0%, 100% { opacity: .5; scale: 1; } 50% { opacity: 1; scale: 1.7; } }
+html[data-look="western"] .dp.cn .wick { left: 50%; top: calc(var(--w) * -.05); }
+html[data-look="western"] .dp.cn .wick b { box-shadow: 0 0 0 1.5px var(--gold), 0 0 8px 3px rgba(235,208,143,.85); }
+
 /* ---------- pages: a content box inside the frame (92u crown, 50u sides, 58u foot); only stages and fills may reach 16u past the sides ---------- */
 .page { position: relative; min-height: 100vh; min-height: 100svh; overflow-x: clip; }
 .pg {

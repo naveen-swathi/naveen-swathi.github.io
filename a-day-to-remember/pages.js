@@ -8,7 +8,7 @@ const DRIFT = 0.07;
 const GAP = 0.9;
 const fire = (el, name, detail) => el.dispatchEvent(new CustomEvent(name, { detail }));
 
-export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
+export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} }) {
   const chan = (els) => els.map((el) => ({ el, fade: el.classList.contains('fade'), key: '' }));
   const pages = [...document.querySelectorAll('.page')].filter((el) => getComputedStyle(el).display !== 'none').map((el, i) => {
     const pg = el.firstElementChild;
@@ -220,7 +220,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     // Reduced motion: the r13 scrolling document; goPage jumps there (used by the autopilot and the calendar menu).
     const goPage = (el, deep = false) => { scrollTo(0, el.getBoundingClientRect().top + scrollY + (deep ? Math.max(0, el.offsetHeight - innerHeight) : 0)); return Promise.resolve(); };
     addEventListener('pg:deep', (ev) => { if (ev.detail) goPage(ev.detail, true); });
-    return { start() {}, pages: pages.map((p) => p.el), go: () => Promise.resolve(), goPage, next() {}, prev() {}, get index() { return 0; }, get busy() { return false; }, get y() { return scrollY; }, rest: (el) => ({ r: el.offsetTop, over: Math.max(0, el.offsetHeight - innerHeight) }) };
+    return { start() {}, pages: pages.map((p) => p.el), go: () => Promise.resolve(), goPage, next() {}, prev() {}, refresh() {}, get index() { return 0; }, get busy() { return false; }, get y() { return scrollY; }, rest: (el) => ({ r: el.offsetTop, over: Math.max(0, el.offsetHeight - innerHeight) }) };
   }
 
   document.documentElement.classList.add('paged');
@@ -241,8 +241,124 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     if (navigated || busy || VIDEO || RM) return;
     if (document.body.matches('.locked, .opening')) { nudgeT = setTimeout(nudge, 1500); return; }
     nudges++;
-    steps()[at].p.pg.animate([{ translate: '0 0' }, { translate: '0 -12px', offset: 0.45 }, { translate: '0 0' }], { duration: 1100, easing: 'cubic-bezier(.45,0,.3,1)' });
+    lift(steps()[at].p, 12, 1100);
     if (nudges < 3) nudgeT = setTimeout(nudge, 7000);
+  }
+  const lift = (p, px, ms) => p.pg.animate([{ translate: '0 0' }, { translate: `0 -${px}px`, offset: 0.45 }, { translate: '0 0' }], { duration: ms, easing: 'cubic-bezier(.45,0,.3,1)' });
+
+  // Idle ladder: pages 2+ lift after 8 s without input and show the swipe hand after 20 s; page 1 shows the hand once the card has landed.
+  const hand = document.getElementById('hand');
+  const hinting = !!hand && !AUTO && !VIDEO;
+  let idle8 = 0;
+  let idle20 = 0;
+  let h1 = 0;
+  let handT = 0;
+  let handOn = false;
+  const HAND_KEEP = 'button, a, .scratch, .card, .tn-stage, .tn-thread, .lamps, .cl-lock, .dp';
+  function placeHand() {
+    ['--hand-x', '--hand-y', '--w', '--tr'].forEach((n) => hand.style.removeProperty(n));
+    const pg = steps()[at].p.pg;
+    const vh = innerHeight;
+    const vw = innerWidth;
+    const w = parseFloat(getComputedStyle(hand.querySelector('.hd-fig')).width);
+    const tr = parseFloat(getComputedStyle(hand.querySelector('.hd-trail')).height);
+    if (!w || !tr) return;
+    const H = tr + w * 1.5;
+    const GAP = 8;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;visibility:hidden;width:var(--u);padding-bottom:env(safe-area-inset-bottom)';
+    document.body.appendChild(probe);
+    const u = probe.getBoundingClientRect().width || 1;
+    const floor = vh - Math.max(74, 66 + (parseFloat(getComputedStyle(probe).paddingBottom) || 0));
+    probe.remove();
+    const pr = pg.getBoundingClientRect();
+    const colL = Math.max(0, pr.left) + 50 * u;
+    const colR = Math.min(vw, pr.right) - 50 * u;
+    const top = Math.max(GAP, 92 * u);
+    const obs = [];
+    const add = (b) => { if (b.width > 1 && b.height > 1) obs.push(b); };
+    const tw = document.createTreeWalker(pg, NodeFilter.SHOW_TEXT);
+    for (let n; (n = tw.nextNode());) {
+      if (!n.textContent.trim()) continue;
+      const el = n.parentElement;
+      if (el.closest('.sr') || getComputedStyle(el).display === 'none') continue;
+      const rg = document.createRange();
+      rg.selectNodeContents(n);
+      for (const q of rg.getClientRects()) add(q);
+    }
+    pg.querySelectorAll(HAND_KEEP).forEach((e) => { if (getComputedStyle(e).display !== 'none' && !e.closest('[hidden]')) add(e.getBoundingClientRect()); });
+    ['#nx', '#music', '#pdots'].forEach((q) => { const e = document.querySelector(q); if (e && getComputedStyle(e).display !== 'none' && !e.hidden) add(e.getBoundingClientRect()); });
+    const cands = [(colL + colR) / 2, colL + w * 0.6, colR - w * 0.6];
+    let best = null;
+    for (const cx of cands) {
+      const x0 = cx - w * 0.6 - GAP;
+      const x1 = cx + w * 0.6 + GAP;
+      const ys = obs.filter((b) => b.right > x0 && b.left < x1 && b.bottom > 0 && b.top < vh).map((b) => [b.top - GAP, b.bottom + GAP]).sort((a, b) => a[0] - b[0]);
+      const bands = [];
+      let y = top;
+      for (const [t, b] of ys) { if (t > y) bands.push([y, t]); y = Math.max(y, b); }
+      if (floor > y) bands.push([y, floor]);
+      const fit = bands.filter(([t, b]) => b - t >= H * 0.8).pop();
+      if (!fit) continue;
+      const band = fit;
+      const s = Math.min(1, (band[1] - band[0]) / H);
+      if (!best || s > best.s) best = { cx, band, s };
+      if (s === 1) break;
+    }
+    if (!best) return;
+    const { cx, band, s } = best;
+    if (s < 1) { hand.style.setProperty('--w', `${w * s}px`); hand.style.setProperty('--tr', `${-tr * s}px`); }
+    const anchorY = band[1] - w * s * 1.422;
+    hand.style.setProperty('--hand-y', `${vh - anchorY}px`);
+    if (Math.abs(cx - vw / 2) > 1) hand.style.setProperty('--hand-x', `${cx}px`);
+  }
+  const showHand = (on) => {
+    if (handOn === on) return;
+    handOn = on;
+    clearTimeout(handT);
+    if (on) { placeHand(); hand.classList.remove('out'); hand.classList.add('on'); } else { hand.classList.add('out'); handT = setTimeout(() => hand.classList.remove('on', 'out'), 400); }
+  };
+  const isLocked = (p) => !AUTO && !!hooks.locked?.(p.el);
+  function arm() {
+    clearTimeout(idle8);
+    clearTimeout(idle20);
+    if (!hinting) return;
+    showHand(false);
+    if (!started || busy || inGate()) return;
+    const p = steps()[at].p;
+    if (p.i === last || isLocked(p)) return;
+    if (p.i > 0) idle8 = setTimeout(() => { if (!busy && p.live) lift(p, 12, 1100); }, 8000);
+    idle20 = setTimeout(() => { if (!busy && p.live) showHand(true); }, 20000);
+  }
+  const firstHand = () => {
+    if (navigated) return;
+    if (inGate() || document.body.matches('.locked, .opening')) { h1 = setTimeout(firstHand, 400); return; }
+    showHand(true);
+  };
+  const touched = () => { lastInput = performance.now(); if (hinting && !inGate() && (navigated || at > 0)) arm(); };
+
+  let lastRefuse = 0;
+  function refuse() {
+    const p = steps()[at].p;
+    const now = performance.now();
+    if (!p.live || now - lastRefuse < 1200) return;
+    lastRefuse = now;
+    lift(p, 10, 650);
+    navigator.vibrate?.(10);
+    const msg = hooks.refuse?.(p.el);
+    if (msg && srEl) srEl.textContent = msg;
+  }
+  // A locked page stops forward moves past it (its own deep step is allowed); a jump from earlier lands on its first step.
+  function lockClamp(S, k) {
+    if (AUTO) return k;
+    for (const p of pages) {
+      if (!hooks.locked?.(p.el)) continue;
+      const first = S.findIndex((s) => s.p === p);
+      let end = first;
+      S.forEach((s, i) => { if (s.p === p) end = i; });
+      if (end >= at && k > end) return Math.max(first, at);
+    }
+    return k;
   }
 
   const DUR = VIDEO ? 1.4 : 1.1;
@@ -253,6 +369,8 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   function go(k, { dur } = {}) {
     const S = steps();
     k = Math.max(0, Math.min(S.length - 1, k));
+    const kl = lockClamp(S, k);
+    if (kl !== k) { k = kl; if (k === at) { if (!busy && !hooks.done?.(S[at].p.el)) refuse(); return Promise.resolve(); } }
     if (!started || k === at && !busy) return Promise.resolve();
     if (busy) { pending = k; return new Promise((res) => { const t = setInterval(() => { if (!busy && pending === null) { clearInterval(t); res(); } }, 50); }); }
     const from = S[at];
@@ -262,7 +380,9 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     const G = GAP * vh;
     busy = true;
     navigated = true;
+    clearTimeout(h1);
     at = k;
+    arm();
     pq = [];
     cancelWarm();
     shield.hidden = false;
@@ -292,6 +412,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
           update();
           nxState();
           settle(steps()[at].p);
+          arm();
           res();
           if (pending !== null) { const n = pending; pending = null; go(n); }
         },
@@ -383,7 +504,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   // trackpad flick never starts a second step, but a clearly new swipe inside the tail (3x the tail's smallest delta) does.
   let acc = 0, lastT = 0, minMag = Infinity, armed = true;
   addEventListener('wheel', (ev) => {
-    lastInput = performance.now();
+    touched();
     if (inGate() || ev.ctrlKey) return;
     ev.preventDefault();
     const now = performance.now();
@@ -406,7 +527,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
   // Touch: a vertical swipe of 56 px (or a 24 px flick faster than 0.3 px/ms) is one step; nothing follows the finger.
   let t0 = null;
   addEventListener('touchstart', (ev) => {
-    lastInput = performance.now();
+    touched();
     if (ev.touches.length !== 1 || inGate()) { t0 = null; return; }
     const t = ev.touches[0];
     t0 = blocked(ev.target) ? null : { x: t.clientX, y: t.clientY, t: performance.now(), done: false };
@@ -429,9 +550,10 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     t0 = null;
   }, { passive: true });
   addEventListener('touchcancel', () => { t0 = null; }, { passive: true });
+  addEventListener('pointerdown', touched, { passive: true });
 
   addEventListener('keydown', (ev) => {
-    lastInput = performance.now();
+    touched();
     if (inGate() || ev.defaultPrevented || ev.repeat || ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const t = ev.target;
     const onControl = t?.closest?.('button, a, [role="button"], input, textarea, select');
@@ -469,7 +591,7 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
     schedule();
   };
   let rt = 0;
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(relayout, 120); });
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { relayout(); if (handOn) placeHand(); }, 120); });
   addEventListener('relayout', relayout);
   pages.forEach((p) => new ResizeObserver(() => { if (!started) return; if (busy) stale = true; else relayout(); }).observe(p.pg));
   document.fonts?.ready.then(relayout);
@@ -488,10 +610,12 @@ export function initPages({ gsap, RM, VIDEO = false, hooks = {} }) {
       setLive(pages[0], true);
       nxState();
       warmSoon(2500);
+      if (hinting) h1 = setTimeout(firstHand, 4400);
     },
     pages: pages.map((p) => p.el),
     go: (k, o) => go(k, o),
     goPage,
+    refresh: arm,
     next: () => step(1),
     prev: () => step(-1),
     get index() { return at; },

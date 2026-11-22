@@ -28,6 +28,14 @@ export function initDate({ gsap, RM, scratch, blossoms, gilt }) {
       if (state === 'down') { touched = true; sway?.kill(); gsap.to(card, { rotation: 0, duration: 0.2, overwrite: true }); }
       else { touched = false; gsap.delayedCall(0.6, () => { if (!scratch.done && !touched) startSway(); }); }
     },
+    refuse() {
+      if (scratch.done) return;
+      if (!RM) {
+        gsap.fromTo('#tap-reveal', { scale: 1 }, { scale: 1.08, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut', clearProps: 'scale' });
+        gsap.fromTo('#hint', { scale: 1 }, { scale: 1.07, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut', clearProps: 'scale' });
+      }
+      return 'Scratch the card, or use the reveal button, to continue';
+    },
     onReveal() {
       if (RM) return;
       sway?.kill();
@@ -44,7 +52,7 @@ export function initDate({ gsap, RM, scratch, blossoms, gilt }) {
   };
 }
 
-export function initBlessings({ gsap, RM, VIDEO, deepams, blossoms }) {
+export function initBlessings({ gsap, RM, VIDEO, WEST, deepams, blossoms, onUnlock = () => {} }) {
   const sec = $('#blessings');
   const row = $('.lamps', sec);
   const lamps = [...sec.querySelectorAll('.lamp')];
@@ -56,13 +64,50 @@ export function initBlessings({ gsap, RM, VIDEO, deepams, blossoms }) {
   let lastTouch = -9999;
   let auto = null;
   const mark = (i) => { lamps[i].setAttribute('aria-pressed', 'true'); lamps[i].setAttribute('aria-label', `Lamp ${i + 1} of 5, lit`); };
-  if (RM) { lamps.forEach((_, i) => { lit[i] = true; mark(i); }); return; }
+  if (RM) { lamps.forEach((_, i) => { lit[i] = true; mark(i); }); return { locked: false, refuse() {} }; }
   const hint = $('.bl-hint', sec);
+  const base = WEST ? 'Touch each candle to light it' : 'Touch each lamp to light it';
+  const noun = WEST ? 'candles' : 'lamps';
+  const ORDER = [2, 1, 3, 0, 4];
+  const AUTO_S = VIDEO ? 0.6 : document.documentElement.classList.contains('demo') ? 4 : 20;
+  let doneAt = 0;
+  let refused = 0;
+  let hintT = null;
+  let beckonT = 0;
+  hint.textContent = base;
+  dps.forEach((d) => d.insertAdjacentHTML('beforeend', '<i class="wick"><b></b></i>'));
   gsap.set(lamps, { opacity: 0, y: 6 });
   wm?.classList.add('turn');
 
+  const beckon = (wait) => {
+    clearTimeout(beckonT);
+    beckonT = setTimeout(() => { const n = ORDER.find((i) => !lit[i]); dps.forEach((d, i) => d.classList.toggle('beckon', i === n && !all)); }, wait);
+  };
+  const swap = (txt) => gsap.to(hint, { yPercent: -108, opacity: 0, duration: 0.25, ease: 'power2.in', overwrite: true, onComplete: () => { if (!all) { hint.textContent = txt; rise(gsap, hint, { overwrite: true }); } } });
+  const say = (txt, back = true) => {
+    hintT?.kill();
+    swap(txt);
+    if (back) hintT = gsap.delayedCall(3.2, () => { if (!all) swap(base); });
+  };
+  function refuse() {
+    if (all) return;
+    refused++;
+    if (refused >= 3) {
+      say('Let us light them together', false);
+      ORDER.filter((i) => !lit[i]).forEach((i, k) => gsap.delayedCall(0.5 + k * 0.3, () => light(i, true)));
+      return;
+    }
+    say(`Light all the ${noun} to continue`);
+    ORDER.filter((i) => !lit[i]).forEach((i, k) => $('.wick b', dps[i]).animate([{ scale: 1, opacity: 0.5 }, { scale: 2.8, opacity: 1, offset: 0.4 }, { scale: 1, opacity: 0.5 }], { duration: 900, delay: k * 130, easing: 'ease-in-out' }));
+  }
+
   function complete() {
     all = true;
+    doneAt = performance.now();
+    hintT?.kill();
+    beckon(0);
+    auto?.kill();
+    gsap.delayedCall(1.05, onUnlock);
     gsap.to($('.pool', sec), { opacity: 1, duration: 1.2, ease: 'power1.inOut' });
     gsap.to(hint, { yPercent: -108, opacity: 0, duration: 0.4, ease: 'power2.in' });
     rise(gsap, $('.bl-after', sec), { delay: 0.3 });
@@ -85,13 +130,14 @@ export function initBlessings({ gsap, RM, VIDEO, deepams, blossoms }) {
     deepams.embers(dps[i], 3);
     kolamPulse(i);
     mark(i);
-    if (!all && lit.every(Boolean)) complete();
+    if (!all && lit.every(Boolean)) complete(); else beckon(500);
   }
   const idx = (x) => { const r = row.getBoundingClientRect(); return Math.min(4, Math.max(0, Math.floor(((x - r.left) / r.width) * 5))); };
 
   let down = false;
   row.addEventListener('pointerdown', (e) => {
     down = true;
+    lastTouch = performance.now();
     const i = idx(e.clientX);
     if (lit[i]) { const c = lamps[i].getBoundingClientRect(); deepams.lean(dps[i], e.clientX < c.left + c.width / 2 ? 1 : -1); } else light(i);
   });
@@ -102,16 +148,20 @@ export function initBlessings({ gsap, RM, VIDEO, deepams, blossoms }) {
   once(sec, 'pg:reveal', () => {
     gsap.to(lamps, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, delay: 0.6, ease: 'power2.out' });
     if (!VIDEO) rise(gsap, hint, { delay: 1.4 });
+    beckon(2000);
   });
-  sec.addEventListener('pg:rest', () => {
-    if (all || auto) return;
-    auto = gsap.delayedCall(VIDEO ? 0.6 : document.documentElement.classList.contains('demo') ? 4 : 12, () => {
+  const armAuto = (secs) => {
+    auto = gsap.delayedCall(secs, () => {
       auto = null;
-      if (all || !sec.classList.contains('live') || (!VIDEO && performance.now() - lastTouch < 1500)) return;
-      [2, 1, 3, 0, 4].filter((i) => !lit[i]).forEach((i, k) => gsap.delayedCall(k * 0.22, () => light(i, true)));
+      if (all || !sec.classList.contains('live')) return;
+      const wait = AUTO_S - (performance.now() - lastTouch) / 1000;
+      if (!VIDEO && wait > 0.2) { armAuto(wait); return; }
+      ORDER.filter((i) => !lit[i]).forEach((i, k) => gsap.delayedCall(k * 0.22, () => light(i, true)));
     });
-  });
+  };
+  sec.addEventListener('pg:rest', () => { if (!all && !auto) armAuto(AUTO_S); });
   sec.addEventListener('pg:leave', () => { auto?.kill(); auto = null; });
+  return { get locked() { return !all || performance.now() - doneAt < 1000; }, get done() { return all; }, refuse };
 }
 
 export function initClosing({ gsap, RM, VIDEO, deepams, blossoms, gilt, onShower = () => {} }) {

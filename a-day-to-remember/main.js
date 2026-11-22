@@ -133,11 +133,15 @@ const PEEK = !WEST && PHONE;
 if (PEEK) buildPeeks(F, [...document.querySelectorAll('.page > .pg')]);
 const tn = initThenNow({ gsap, RM, blossoms });
 const dateFx = initDate({ gsap, RM, scratch: { get done() { return scratch.done; } }, blossoms, gilt });
-const scratch = initScratch({ gsap, RM, onReveal: () => { dateFx.onReveal(); birds.bloom(); pond?.bloom(); }, onTouch: dateFx.onTouch });
+const scratch = initScratch({ gsap, RM, onReveal: () => { dateFx.onReveal(); birds.bloom(); pond?.bloom(); setTimeout(() => pages.refresh(), 700); }, onTouch: dateFx.onTouch });
 const dp = (s) => $(s, $('#invite'));
+let bless = null;
 const pages = initPages({
-  gsap, RM, VIDEO,
+  gsap, RM, VIDEO, AUTO,
   hooks: {
+    locked: (el) => (el.id === 'date' && !scratch.done) || (el.id === 'blessings' && !!bless?.locked),
+    refuse: (el) => (el.id === 'date' ? dateFx.refuse() : bless?.refuse()),
+    done: (el) => el.id === 'blessings' && !!bless?.done,
     blockSwipe: (t) => !!t?.closest?.('#foil') && !scratch.done,
     live: (id, el) => { if (hold) held = id; else onLive(id); loops.thaw(el); },
     leaving: (from, to, fromEl, toEl) => { birds.hold(true); loops.freeze(fromEl, toEl); blossoms.pause(); },
@@ -176,7 +180,7 @@ if (RM && PEEK) {
   addEventListener('resize', again);
   placePeeks(pgs, unit());
 }
-initBlessings({ gsap, RM, VIDEO, deepams, blossoms });
+bless = initBlessings({ gsap, RM, VIDEO, WEST, deepams, blossoms, onUnlock: () => pages.refresh() });
 initClosing({ gsap, RM, VIDEO, deepams, blossoms, gilt, onShower: birds.lift });
 initExtras({ gsap, RM, blossoms });
 const onImg = (im) => new Promise((res) => {
