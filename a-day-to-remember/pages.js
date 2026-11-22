@@ -241,10 +241,10 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
     if (navigated || busy || VIDEO || RM) return;
     if (document.body.matches('.locked, .opening')) { nudgeT = setTimeout(nudge, 1500); return; }
     nudges++;
-    lift(steps()[at].p, 12, 1100);
+    lift(steps()[at].p, 24, 1100, true);
     if (nudges < 3) nudgeT = setTimeout(nudge, 7000);
   }
-  const lift = (p, px, ms) => p.pg.animate([{ translate: '0 0' }, { translate: `0 -${px}px`, offset: 0.45 }, { translate: '0 0' }], { duration: ms, easing: 'cubic-bezier(.45,0,.3,1)' });
+  const lift = (p, px, ms, twice) => p.pg.animate(twice ? [{ translate: '0 0' }, { translate: `0 -${px}px`, offset: 0.3 }, { translate: '0 0', offset: 0.55 }, { translate: `0 -${Math.round(px * 0.45)}px`, offset: 0.75 }, { translate: '0 0' }] : [{ translate: '0 0' }, { translate: `0 -${px}px`, offset: 0.45 }, { translate: '0 0' }], { duration: ms, easing: 'cubic-bezier(.45,0,.3,1)' });
 
   // Idle ladder: pages 2+ lift after 8 s without input and show the swipe cue after 20 s; page 1 shows the cue once the card has landed.
   const cue = document.getElementById('cue');
@@ -260,6 +260,14 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
   const shown = (e, root) => { for (let n = e; n && n !== root; n = n.parentElement) { const s = getComputedStyle(n); if (n.hidden || s.display === 'none' || s.visibility === 'hidden' || +s.opacity < 0.05) return false; } return true; };
   function placeCue() {
     const pg = steps()[at].p.pg;
+    const an = pg.getAnimations();
+    const ts = an.map((a) => a.currentTime);
+    an.forEach((a) => { a.currentTime = 0; });
+    const ok = measureCue(pg);
+    an.forEach((a, i) => { a.currentTime = ts[i]; });
+    return ok;
+  }
+  function measureCue(pg) {
     const vh = innerHeight;
     const vw = innerWidth;
     const set = (x, y, d) => { cue.style.setProperty('--cue-x', `${x.toFixed(1)}px`); cue.style.setProperty('--cue-y', `${y.toFixed(1)}px`); cue.style.setProperty('--cue-d', `${d}px`); };
@@ -274,7 +282,8 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
         fl.forEach((e) => { ft = Math.min(ft, e.getBoundingClientRect().top); });
         const gap = ft - kb;
         const c = gap >= 96 ? 20 : gap < 80 ? 12 : 14;
-        const d = Math.min(80, gap - 2 * c);
+        const room = gap - 2 * c;
+        const d = Math.min(110, Math.max(room - 2, Math.min(room, 44)));
         if (d >= 36) { set(kr.left + kr.width / 2, ft - c, d); return true; }
         const cx = kr.left + kr.width / 2;
         const inCol = (b) => b.right > cx - 14 && b.left < cx + 14;
@@ -285,7 +294,7 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
         fl.forEach((e) => { const b = e.getBoundingClientRect(); if (inCol(b)) base = Math.min(base, b.top); });
         const g = base - top - 4;
         const c2 = g >= 96 ? 20 : g < 70 ? 10 : g < 80 ? 12 : 14;
-        const d2 = Math.min(80, g - 2 * c2);
+        const d2 = Math.min(110, g - 2 * c2);
         if (d2 >= 36) { set(cx, base - c2, d2); return true; }
       }
     }
@@ -351,8 +360,8 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
       if (fit) { best = { cx, y1: fit[1], g: fit[1] - fit[0] }; break; }
     }
     if (!best) return false;
-    const C = best.g < 71 ? 8 : 13;
-    set(best.cx, best.y1 - C, Math.min(80, best.g - C - 14));
+    const C = best.g < 71 ? 12 : 16;
+    set(best.cx, best.y1 - C, Math.min(110, best.g - C - 14));
     return true;
   }
   const showCue = (on) => {
@@ -372,7 +381,7 @@ export function initPages({ gsap, RM, VIDEO = false, AUTO = false, hooks = {} })
     if (!started || busy || inGate()) return;
     const p = steps()[at].p;
     if (p.i === last || isLocked(p)) return;
-    if (p.i > 0) idle8 = setTimeout(() => { if (!busy && p.live) lift(p, 12, 1100); }, 8000);
+    if (p.i > 0) idle8 = setTimeout(() => { if (!busy && p.live) lift(p, 24, 1100, true); idle8 = setTimeout(() => { if (!busy && p.live) lift(p, 24, 1100, true); }, 6000); }, 8000);
     idle20 = setTimeout(() => { if (!busy && p.live) showCue(true); }, 20000);
   }
   let fc = 0;

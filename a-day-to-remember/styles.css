@@ -290,13 +290,13 @@ body:is(.locked, .opening) .pdots, .video .pdots, .rm .pdots, html:not(.js) .pdo
 .swipe-cue.on:not(.out) { visibility: visible; opacity: 1; transition: opacity .35s ease; }
 .swipe-cue > *, .cue-mover > * { position: absolute; display: block; opacity: 0; will-change: transform, opacity; }
 .cue-mover { left: 0; top: 0; width: 0; height: 0; opacity: 1; }
-.cue-pt { width: 4px; height: 4px; left: -2px; top: -2px; border-radius: 50%; background: var(--gold, #B08A3E); box-shadow: 0 0 0 2px rgba(255,253,248,.6), 0 0 5px 1px rgba(235,208,143,.6); }
-.cue-p1 { top: calc(var(--cue-d) * -1 - 2px); }
-.cue-tail { left: -2px; top: 0; width: 4px; height: 36px; overflow: visible; transform-origin: 50% 0; transform: scaleY(0); filter: drop-shadow(0 0 2px rgba(255,253,248,.85)); }
+.cue-pt { width: 6px; height: 6px; left: -3px; top: -3px; border-radius: 50%; background: var(--gold, #B08A3E); box-shadow: 0 0 0 2px rgba(255,253,248,.6), 0 0 5px 1px rgba(235,208,143,.6); }
+.cue-p1 { top: calc(var(--cue-d) * -1 - 3px); }
+.cue-tail { left: -3px; top: 0; width: 6px; height: 52px; overflow: visible; transform-origin: 50% 0; transform: scaleY(0); filter: drop-shadow(0 0 2px rgba(255,253,248,.85)); }
 .cue-t0 { stop-color: var(--gold, #B08A3E); stop-opacity: 0; }
 .cue-t1 { stop-color: var(--gold-hi, #EBD08F); stop-opacity: .95; }
-.cue-dot { width: 10px; height: 10px; left: -5px; top: -5px; border-radius: 50%; background: radial-gradient(circle at 42% 38%, var(--pearl, #FFFDF8) 0 14%, var(--gold-hi, #EBD08F) 46%, var(--gold, #B08A3E) 100%); box-shadow: 0 0 0 3px rgba(255,253,248,.5), 0 0 11px 4px rgba(255,253,248,.7); }
-.cue-ripple { width: 16px; height: 16px; left: -8px; top: -8px; border-radius: 50%; border: 1px solid rgba(176,138,62,.7); }
+.cue-dot { width: 15px; height: 15px; left: -7.5px; top: -7.5px; border-radius: 50%; background: radial-gradient(circle at 42% 38%, var(--pearl, #FFFDF8) 0 14%, var(--gold-hi, #EBD08F) 46%, var(--gold, #B08A3E) 100%); box-shadow: 0 0 0 3px rgba(255,253,248,.55), 0 0 14px 5px rgba(255,253,248,.75), 0 0 6px 1px rgba(176,138,62,.35); }
+.cue-ripple { width: 22px; height: 22px; left: -11px; top: -11px; border-radius: 50%; border: 1px solid rgba(176,138,62,.7); }
 .cue-glow { width: 16px; height: 16px; left: -8px; top: calc(var(--cue-d) * -1 - 8px); border-radius: 50%; background: radial-gradient(circle, rgba(235,208,143,.8) 0 30%, rgba(235,208,143,0) 70%); }
 
 .swipe-cue.on .cue-p0 { animation: cue-p0 var(--cue-t) linear infinite; }
@@ -308,8 +308,8 @@ body:is(.locked, .opening) .pdots, .video .pdots, .rm .pdots, html:not(.js) .pdo
 .swipe-cue.on .cue-dot { animation: cue-dot var(--cue-t) linear infinite; }
 
 /* 2.8s: press 0-14.3%, glide 14.3-46.4%, fade 46.4-57.1%, rest to 100% */
-@keyframes cue-p0 { 0% { opacity: 0 } 8% { opacity: .38 } 46.4% { opacity: .38 } 57.1%, 100% { opacity: 0 } }
-@keyframes cue-p1 { 0% { opacity: 0; transform: scale(1) } 8% { opacity: .26; transform: scale(1) } 40% { opacity: .26; transform: scale(1); animation-timing-function: ease-out } 46.4% { opacity: .9; transform: scale(1.7) } 52% { opacity: .55; transform: scale(1.2) } 57.1%, 100% { opacity: 0; transform: scale(1) } }
+@keyframes cue-p0 { 0% { opacity: 0 } 8% { opacity: .6 } 46.4% { opacity: .6 } 57.1%, 100% { opacity: 0 } }
+@keyframes cue-p1 { 0% { opacity: 0; transform: scale(1) } 8% { opacity: .45; transform: scale(1) } 40% { opacity: .45; transform: scale(1); animation-timing-function: ease-out } 46.4% { opacity: .9; transform: scale(1.7) } 52% { opacity: .55; transform: scale(1.2) } 57.1%, 100% { opacity: 0; transform: scale(1) } }
 @keyframes cue-mover {
   0%, 14.3% { transform: translateY(0); animation-timing-function: ease-in-out }
   46.4%, 100% { transform: translateY(calc(var(--cue-d) * -1)) }
